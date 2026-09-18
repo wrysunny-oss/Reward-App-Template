@@ -1,0 +1,9 @@
+<resources>
+    <!--
+      Pangrowth 3.0.0.2 中的这两个资源包含多个非位置参数，Android 新版
+      AAPT2 会拒绝编译。应用层使用等价的位置参数覆盖，既保留 SDK 展示文案，
+      也避免直接修改 Gradle 缓存中的第三方 AAR。
+    -->
+    <string name="djx_drama_history_info" formatted="false">观看至%1$d集 共%2$d集</string>
+    <string name="djx_drama_info" formatted="false">%1$s共%2$d集</string>
+</resources>

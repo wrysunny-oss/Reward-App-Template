@@ -1,0 +1,45 @@
+buildscript {
+    ext {
+        buildToolsVersion = '36.0.0'
+        minSdkVersion = 24
+        compileSdkVersion = 36
+        targetSdkVersion = 36
+        ndkVersion = '27.1.12297006'
+        // 与 React Native 0.84 Gradle 插件保持一致。
+        kotlinVersion = '2.1.20'
+    }
+    repositories {
+        maven { url 'https://artifact.bytedance.com/repository/pangle' }
+        maven { url 'https://artifact.bytedance.com/repository/Volcengine' }
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath('com.android.tools.build:gradle')
+        classpath('com.facebook.react:react-native-gradle-plugin')
+        classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
+    }
+}
+
+allprojects {
+    repositories {
+        maven { url 'https://artifact.bytedance.com/repository/pangle' }
+        maven { url 'https://artifact.bytedance.com/repository/Volcengine' }
+        google()
+        mavenCentral()
+    }
+}
+
+subprojects { subproject ->
+    subproject.configurations.configureEach {
+        // Collection 1.4+ 已将 KTX 类合并到 collection-jvm，统一版本可避免重复类。
+        resolutionStrategy.force 'androidx.collection:collection-ktx:1.4.2'
+    }
+    subproject.pluginManager.withPlugin('com.android.library') {
+        subproject.android.buildToolsVersion = rootProject.ext.buildToolsVersion
+        subproject.android.compileSdk = rootProject.ext.compileSdkVersion
+    }
+}
+
+apply plugin: 'com.facebook.react.rootproject'

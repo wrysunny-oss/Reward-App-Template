@@ -1,0 +1,44 @@
+# Local diagnostics and temporary work
+.runlogs/
+.android-debug/
+.rn-gradle/
+.kotlin-daemon/
+.git-local-backups/
+.tmp/
+.tmp-*/
+*.log
+
+# Dependency and package-manager caches
+**/node_modules/
+**/.npm-cache/
+**/.yarn-cache/
+**/.bundle/
+
+# Generated archives and local SDK exports
+*.zip
+*.rar
+*.apk
+*.aab
+SDK_Setting_*.json
+# GroMore 接入工具导出的第三方 ADN 二进制 SDK；本地放入 android/app/libs，避免提交大体积/受许可约束文件。
+MobileReactNative/android/app/libs/*.aar
+!MobileReactNative/android/app/libs/README.md
+
+# Local secrets and signing material
+**/.env
+**/.env.*
+!**/.env.example
+!Admin/apps/web-naive/.env
+!Admin/apps/web-naive/.env.analyze
+!Admin/apps/web-naive/.env.development
+!Admin/apps/web-naive/.env.production
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+
+# Deployment runtime data
+deploy/backend.env
+deploy/data/
+deploy/backups/

@@ -1,0 +1,35 @@
+{
+  "$schema": "./reward-contract.schema.json",
+  "schemaVersion": 1,
+  "milestonePeriods": [
+    "DAILY",
+    "LIFETIME"
+  ],
+  "configuration": {
+    "shareRateFields": [
+      "defaultShareRateBps",
+      "directShareRateBps",
+      "indirectShareRateBps"
+    ],
+    "dailyLimitField": "dailyRewardedAdLimit",
+    "switchFields": [
+      "splashRewardEnabled",
+      "feedRewardEnabled",
+      "fullScreenRewardEnabled",
+      "rewardedVideoRewardEnabled",
+      "dramaUnlockRewardEnabled"
+    ],
+    "milestoneFields": {
+      "rewardedAdMilestones": "rewardedAdCountMax",
+      "inviteMilestones": "inviteCountMax"
+    }
+  },
+  "limits": {
+    "shareRateBpsMax": 10000,
+    "dailyRewardedAdLimitMax": 1000,
+    "milestoneItemsMax": 20,
+    "rewardedAdCountMax": 1000,
+    "inviteCountMax": 1000000,
+    "rewardCoinsMax": 1000000000
+  }
+}

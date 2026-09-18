@@ -1,0 +1,8 @@
+.env
+.runlogs
+certs
+dist
+node_modules
+uploads
+*.log
+npm-debug.log*

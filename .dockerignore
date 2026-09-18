@@ -1,0 +1,15 @@
+.git
+.github
+**/.env
+**/.runlogs
+**/build
+**/dist
+**/node_modules
+**/uploads
+**/*.log
+**/npm-debug.log*
+Admin
+MobileReactNative
+deploy
+docs
+*.md

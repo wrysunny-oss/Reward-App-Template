@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "reward-contract.schema.json",
+  "title": "广告奖励共享契约",
+  "description": "控制三端奖励配置的字段结构和输入上限。它不是实际运营数值；实际每日次数、分成比例和阶梯奖励在 Admin 管理后台配置。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "milestonePeriods", "configuration", "limits"],
+  "properties": {
+    "$schema": { "type": "string", "description": "为 VS Code 提供字段说明和格式检查，不需要修改。" },
+    "schemaVersion": { "const": 1, "description": "契约结构版本，当前只能填写 1。" },
+    "milestonePeriods": {
+      "type": "array",
+      "description": "后台允许选择的阶梯统计周期。DAILY 表示每天重置，LIFETIME 表示用户永久累计。",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["DAILY", "LIFETIME"] }
+    },
+    "configuration": {
+      "type": "object",
+      "description": "三端接口字段映射。除非同时开发新功能，否则不要修改这里的字段名。",
+      "additionalProperties": false,
+      "required": ["shareRateFields", "dailyLimitField", "switchFields", "milestoneFields"],
+      "properties": {
+        "shareRateFields": { "type": "array", "description": "按万分比保存的分成字段。10000 代表 100%，5000 代表 50%。", "items": { "type": "string" } },
+        "dailyLimitField": { "type": "string", "description": "每日可获得广告收益次数上限对应的接口字段名。" },
+        "switchFields": { "type": "array", "description": "各种广告形式是否参与收益结算的接口开关字段。", "items": { "type": "string" } },
+        "milestoneFields": { "type": "object", "description": "阶梯任务数组字段与其 count 最大值配置之间的映射。", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "description": "管理后台提交配置时的安全上限，不是当前生效的运营配置。",
+      "additionalProperties": false,
+      "required": ["shareRateBpsMax", "dailyRewardedAdLimitMax", "milestoneItemsMax", "rewardedAdCountMax", "inviteCountMax", "rewardCoinsMax"],
+      "properties": {
+        "shareRateBpsMax": { "type": "integer", "minimum": 1, "description": "单个分成比例允许的最大万分比。10000 等于 100%，通常不要修改。" },
+        "dailyRewardedAdLimitMax": { "type": "integer", "minimum": 1, "description": "管理后台允许填写的每日广告收益次数最大值；不是用户当前每日上限。" },
+        "milestoneItemsMax": { "type": "integer", "minimum": 1, "description": "单种阶梯任务最多允许配置多少档。" },
+        "rewardedAdCountMax": { "type": "integer", "minimum": 1, "description": "单个广告阶梯的目标观看次数最大值。" },
+        "inviteCountMax": { "type": "integer", "minimum": 1, "description": "单个邀请阶梯的目标邀请人数最大值。" },
+        "rewardCoinsMax": { "type": "integer", "minimum": 1, "description": "单档阶梯奖励允许填写的金币最大值。" }
+      }
+    }
+  }
+}

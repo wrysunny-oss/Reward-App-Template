@@ -1,0 +1,53 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Android 11 起只能查询清单中明确声明的应用。风控仅检查这三个业务指定应用。 -->
+    <queries>
+      <package android:name="com.tencent.mm" />
+      <package android:name="com.ss.android.ugc.aweme" />
+      <package android:name="com.eg.android.AlipayGphone" />
+      <package android:name="org.lsposed.manager" />
+      <package android:name="org.meowcat.edxposed.manager" />
+      <package android:name="de.robv.android.xposed.installer" />
+      <package android:name="com.topjohnwu.magisk" />
+    </queries>
+
+    <application
+      android:name=".MainApplication"
+      android:label="${appLabel}"
+      android:icon="@mipmap/ic_launcher"
+      android:roundIcon="@mipmap/ic_launcher_round"
+      android:allowBackup="false"
+      android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+      tools:replace="android:allowBackup,android:appComponentFactory,android:label,android:usesCleartextTraffic"
+      android:theme="@style/AppTheme"
+      android:usesCleartextTraffic="${usesCleartextTraffic}"
+      android:supportsRtl="true">
+      <!-- 承载穿山甲 Pangrowth SDK 返回的官方短剧播放器 Fragment。 -->
+      <activity
+        android:name=".DramaPlayerActivity"
+        android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+        android:screenOrientation="portrait"
+        android:theme="@style/AppTheme"
+        android:exported="false" />
+      <activity
+        android:name=".MainActivity"
+        android:label="${appLabel}"
+        android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+        android:launchMode="singleTask"
+        android:windowSoftInputMode="adjustResize"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+      </activity>
+    </application>
+</manifest>

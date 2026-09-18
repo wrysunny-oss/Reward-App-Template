@@ -1,0 +1,246 @@
+apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+
+/**
+ * This is the configuration block to customize your React Native Android app.
+ * By default you don't need to apply any configuration, just uncomment the lines you need.
+ */
+react {
+    /* Folders */
+    //   The root of your project, i.e. where "package.json" lives. Default is '../..'
+    // root = file("../../")
+    //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
+    // reactNativeDir = file("../../node_modules/react-native")
+    //   The folder where the react-native Codegen package is. Default is ../../node_modules/@react-native/codegen
+    // codegenDir = file("../../node_modules/@react-native/codegen")
+    //   The cli.js file which is the React Native CLI entrypoint. Default is ../../node_modules/react-native/cli.js
+    // cliFile = file("../../node_modules/react-native/cli.js")
+
+    /* Variants */
+    //   The list of variants to that are debuggable. For those we're going to
+    //   skip the bundling of the JS bundle and the assets. Default is "debug", "debugOptimized".
+    //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
+    // debuggableVariants = ["liteDebug", "liteDebugOptimized", "prodDebug", "prodDebugOptimized"]
+
+    /* Bundling */
+    //   A list containing the node command and its flags. Default is just 'node'.
+    // nodeExecutableAndArgs = ["node"]
+    //
+    //   The command to run when bundling. By default is 'bundle'
+    // bundleCommand = "ram-bundle"
+    //
+    //   The path to the CLI configuration file. Default is empty.
+    // bundleConfig = file(../rn-cli.config.js)
+    //
+    //   The name of the generated asset file containing your JS bundle
+    // bundleAssetName = "MyApplication.android.bundle"
+    //
+    //   The entry file for bundle generation. Default is 'index.android.js' or 'index.js'
+    // entryFile = file("../js/MyApplication.android.js")
+    //
+    //   A list of extra flags to pass to the 'bundle' commands.
+    //   See https://github.com/react-native-community/cli/blob/main/docs/commands.md#bundle
+    // extraPackagerArgs = []
+
+    /* Hermes Commands */
+    //   The hermes compiler command to run. By default it is 'hermesc'
+    // hermesCommand = "$rootDir/my-custom-hermesc/bin/hermesc"
+    //
+    //   The list of flags to pass to the Hermes compiler. By default is "-O", "-output-source-map"
+    // hermesFlags = ["-O", "-output-source-map"]
+
+    /* Autolinking */
+    autolinkLibrariesWithApp()
+}
+
+/**
+ * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
+ */
+def enableProguardInReleaseBuilds = false
+
+/**
+ * The preferred build flavor of JavaScriptCore (JSC)
+ *
+ * For example, to use the international variant, you can use:
+ * `def jscFlavor = io.github.react-native-community:jsc-android-intl:2026004.+`
+ *
+ * The international variant includes ICU i18n library and necessary data
+ * allowing to use e.g. `Date.toLocaleString` and `String.localeCompare` that
+ * give correct results when using with locales other than en-US. Note that
+ * this variant is about 6MiB larger per architecture than default.
+ */
+def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
+
+def buildProperty = { String projectKey, String environmentKey, String fallback ->
+    providers.gradleProperty(projectKey)
+        .orElse(providers.environmentVariable(environmentKey))
+        .getOrElse(fallback)
+        .trim()
+}
+def configuredAppEnvironment = buildProperty("APP_ENV", "HLY_APP_ENV", "")
+def configuredApiOrigin = buildProperty("APP_API_ORIGIN", "HLY_API_ORIGIN", "")
+def supportedAppEnvironments = ["development", "test", "production"]
+def debugAppEnvironment = configuredAppEnvironment ?: "development"
+def releaseAppEnvironment = configuredAppEnvironment ?: "production"
+def debugApiOrigin = configuredApiOrigin ?: "http://10.0.2.2:3000"
+def releaseApiOrigin = configuredApiOrigin
+// 正式签名文件保存在仓库根目录并由 .gitignore 排除；CI 仍可通过属性或环境变量覆盖。
+def defaultReleaseStoreFile = rootProject.file("../../my-release-key.keystore").absolutePath
+def releaseStoreFile = buildProperty("RELEASE_STORE_FILE", "HLY_RELEASE_STORE_FILE", defaultReleaseStoreFile)
+def releaseStorePassword = buildProperty("RELEASE_STORE_PASSWORD", "HLY_RELEASE_STORE_PASSWORD", "")
+def releaseKeyAlias = buildProperty("RELEASE_KEY_ALIAS", "HLY_RELEASE_KEY_ALIAS", "")
+def releaseKeyPassword = buildProperty("RELEASE_KEY_PASSWORD", "HLY_RELEASE_KEY_PASSWORD", "")
+def buildConfigString = { String value -> "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\"" }
+def appManifest = new groovy.json.JsonSlurper().parse(file("../../app.json"))
+def productConfig = new groovy.json.JsonSlurper().parse(file("../../product.generated.json"))
+def appDisplayName = appManifest.displayName?.toString()?.trim()
+def androidApplicationId = productConfig.android?.applicationId?.toString()?.trim()
+def groMoreAdnAars = [
+    "GDTSDK.unionNormal.4.680.1550.aar",
+    "Baidu_MobAds_SDK_v9.4503.aar",
+    "kssdk-ad-5.3.20.1.aar",
+    "windAd-4.25.14.aar",
+    "windAd-common-2.0.1.aar",
+]
+
+if (!appDisplayName) {
+    throw new GradleException("app.json 缺少 displayName")
+}
+if (!androidApplicationId) {
+    throw new GradleException("product.generated.json 缺少 android.applicationId，请先同步产品配置")
+}
+
+if (!supportedAppEnvironments.contains(debugAppEnvironment) || !supportedAppEnvironments.contains(releaseAppEnvironment)) {
+    throw new GradleException("APP_ENV 只能是 development、test 或 production")
+}
+
+android {
+    ndkVersion rootProject.ext.ndkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdk rootProject.ext.compileSdkVersion
+
+    namespace "com.clound.note"
+    buildFeatures {
+        buildConfig true
+    }
+    defaultConfig {
+        applicationId androidApplicationId
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        manifestPlaceholders.appLabel = appDisplayName
+    }
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        release {
+            if (releaseStoreFile) storeFile file(releaseStoreFile)
+            if (releaseStorePassword) storePassword releaseStorePassword
+            if (releaseKeyAlias) keyAlias releaseKeyAlias
+            if (releaseKeyPassword) keyPassword releaseKeyPassword
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+            buildConfigField "String", "APP_ENV", buildConfigString(debugAppEnvironment)
+            buildConfigField "String", "API_ORIGIN", buildConfigString(debugApiOrigin)
+        }
+        release {
+            // Caution! In production, you need to generate your own keystore file.
+            // see https://reactnative.dev/docs/signed-apk-android.
+            signingConfig signingConfigs.release
+            minifyEnabled enableProguardInReleaseBuilds
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            buildConfigField "String", "APP_ENV", buildConfigString(releaseAppEnvironment)
+            buildConfigField "String", "API_ORIGIN", buildConfigString(releaseApiOrigin)
+        }
+    }
+}
+
+tasks.register("validateReleaseEnvironment") {
+    group = "verification"
+    description = "验证正式 APK 的运行环境和 HTTPS API 地址"
+    doLast {
+        if (releaseAppEnvironment != "production") {
+            throw new GradleException("Release 构建必须使用 APP_ENV=production，当前为 ${releaseAppEnvironment}")
+        }
+        if (!releaseApiOrigin) {
+            throw new GradleException("Release 构建缺少正式 API 地址，请设置 -PAPP_API_ORIGIN=https://api.example.com 或 HLY_API_ORIGIN")
+        }
+        URI uri
+        try {
+            uri = new URI(releaseApiOrigin)
+        } catch (Exception ignored) {
+            throw new GradleException("APP_API_ORIGIN 不是有效 URL：${releaseApiOrigin}")
+        }
+        if (uri.scheme != "https" || !uri.host || (uri.path && uri.path != "/") || uri.query || uri.fragment) {
+            throw new GradleException("Release 的 APP_API_ORIGIN 必须是无查询参数的 HTTPS 服务根地址：${releaseApiOrigin}")
+        }
+        if (!releaseStoreFile || !releaseStorePassword || !releaseKeyAlias || !releaseKeyPassword) {
+            throw new GradleException("Release 构建缺少签名配置，请设置 HLY_RELEASE_STORE_FILE、HLY_RELEASE_STORE_PASSWORD、HLY_RELEASE_KEY_ALIAS、HLY_RELEASE_KEY_PASSWORD")
+        }
+        if (!file(releaseStoreFile).isFile()) {
+            throw new GradleException("Release 证书文件不存在：${file(releaseStoreFile)}")
+        }
+    }
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn("validateReleaseEnvironment")
+}
+
+// 配置由穿山甲后台生成。构建前仅复制这一份文件，避免把工作区其他文件打入 APK。
+tasks.register("copyPangrowthConfig", Copy) {
+    from("../../../SDK_Setting_5879132.json")
+    into(layout.buildDirectory.dir("generated/pangrowthAssets"))
+}
+android.sourceSets.main.assets.srcDir(layout.buildDirectory.dir("generated/pangrowthAssets"))
+tasks.named("preBuild").configure { dependsOn("copyPangrowthConfig") }
+
+// GroMore adapter 只负责桥接；各 ADN 原生 SDK 仍须使用接入工具下载的 AAR。
+// 在构建开始前校验文件名和版本，防止生成缺少广告网络能力的 APK。
+tasks.register("validateGroMoreAdnAars") {
+    group = "verification"
+    description = "验证优量汇、百度、快手和 Sigmob 的 GroMore ADN AAR"
+    doLast {
+        def missing = groMoreAdnAars.findAll { !file("libs/${it}").isFile() }
+        if (!missing.isEmpty()) {
+            throw new GradleException("GroMore 多 ADN SDK 不完整，请从穿山甲接入工具下载并复制到 android/app/libs：\n- ${missing.join('\n- ')}")
+        }
+    }
+}
+tasks.named("preBuild").configure { dependsOn("validateGroMoreAdnAars") }
+
+dependencies {
+    // The version of react-native is set by the React Native Gradle Plugin
+    implementation("com.facebook.react:react-android")
+
+    // GroMore 激励广告。版本必须与穿山甲后台生成代码时选择的版本一致。
+    // GroMore 7.7.1.6 由 react-native-playnest-unionad 统一声明，避免宿主重复维护版本。
+    // GroMore 多 ADN adapter 与原生 SDK 版本必须成对匹配，版本来自穿山甲接入工具。
+    implementation("com.pangle.cn:mediation-gdt-adapter:4.680.1550.1")
+    implementation(files("libs/GDTSDK.unionNormal.4.680.1550.aar"))
+    implementation("com.pangle.cn:mediation-baidu-adapter:9.4503.1")
+    implementation(files("libs/Baidu_MobAds_SDK_v9.4503.aar"))
+    implementation("com.pangle.cn:mediation-ks-adapter:5.3.20.1.1")
+    implementation(files("libs/kssdk-ad-5.3.20.1.aar"))
+    implementation("com.pangle.cn:mediation-sigmob-adapter:4.25.14.1")
+    implementation(files("libs/windAd-4.25.14.aar"))
+    implementation(files("libs/windAd-common-2.0.1.aar"))
+
+    // Pangrowth 短剧内容 SDK；配置文件 SDK_Setting_5879132.json 与此版本配套。
+    implementation("com.pangle.cn:pangrowth-base:3.0.0.2")
+    implementation("com.pangle.cn:pangrowth-djx-sdk-lite:3.0.0.2")
+
+    if (hermesEnabled.toBoolean()) {
+        implementation("com.facebook.react:hermes-android")
+    } else {
+        implementation jscFlavor
+    }
+}

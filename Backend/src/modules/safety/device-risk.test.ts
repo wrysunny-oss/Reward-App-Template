@@ -1,0 +1,14 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { calculateDeviceRiskScore, DEFAULT_RISK_POLICY, distanceInMeters, explainRiskAssessment, getRiskRuleDefinitions } from "./safety.service.js";
+
+const healthy = { challengeId:"00000000-0000-4000-8000-000000000000",deviceId:"device-test-001",simStatus:'PASS' as const,wechatStatus:'PASS' as const,douyinStatus:'PASS' as const,alipayStatus:'PASS' as const,emulatorStatus:'PASS' as const,cloudDeviceStatus:'PASS' as const,scriptStatus:'PASS' as const,networkStatus:'PASS' as const,ipStatus:'PASS' as const,location:{latitude:31.2304,longitude:121.4737,accuracyMeters:10,capturedAt:Date.now(),isMock:false} };
+const policy={...DEFAULT_RISK_POLICY};
+
+test("十项健康检测得到 100 分",()=>assert.equal(calculateDeviceRiskScore(healthy,policy,'PASS').score,100));
+test("五项风险得到 50 分并满足自动封号阈值",()=>{const result=calculateDeviceRiskScore({...healthy,simStatus:'RISK',wechatStatus:'RISK',douyinStatus:'RISK',alipayStatus:'RISK',emulatorStatus:'RISK'},policy,'PASS');assert.equal(result.score,50);assert.equal(result.score<60,true);});
+test("60 分边界不自动封号",()=>{const result=calculateDeviceRiskScore({...healthy,simStatus:'RISK',wechatStatus:'RISK',douyinStatus:'RISK',alipayStatus:'RISK'},policy,'PASS');assert.equal(result.score,60);assert.equal(result.score<60,false);});
+test("未知项不扣分但降低判定可信度",()=>{const result=calculateDeviceRiskScore({...healthy,simStatus:'UNKNOWN',wechatStatus:'UNKNOWN',douyinStatus:'UNKNOWN',alipayStatus:'UNKNOWN',emulatorStatus:'UNKNOWN'},policy,'PASS');assert.equal(result.score,100);assert.equal(result.knownChecks,5);assert.equal(result.eligibleForDecision,false);});
+test("相同坐标距离为零",()=>assert.equal(distanceInMeters({latitude:31.2304,longitude:121.4737},{latitude:31.2304,longitude:121.4737}),0));
+test("规则目录固定包含十项且每个风险项扣十分",()=>{const rules=getRiskRuleDefinitions(policy);assert.equal(rules.length,10);assert.ok(rules.every(item=>item.deduction===10));});
+test("检测明细返回中文原因和附近设备实际扣分",()=>{const result=explainRiskAssessment({simPresent:false,wechatInstalled:true,douyinInstalled:null,alipayInstalled:true,emulatorDetected:true,cloudDeviceDetected:false,scriptDetected:false,networkTrusted:true,ipTrusted:null,locationDistanceSafe:null,locationClusterSafe:false,nearbyDeviceCount:6,nearbyRadiusMeters:150,presenceWindowMinutes:10,locationAccuracyMeters:12,locationMock:false,distanceMeters:null,ip:'127.0.0.1',detail:{context:'login',policySnapshot:policy,evidenceJson:JSON.stringify({phonePermission:true,manufacturer:'Google',model:'Pixel'})}},policy);assert.equal(result.breakdown.find(item=>item.code==='sim')?.deduction,10);assert.match(result.breakdown.find(item=>item.code==='location')?.reason??'',/6 台/);assert.equal(result.breakdown.find(item=>item.code==='douyin')?.status,'UNKNOWN');assert.equal(result.policySource,'SNAPSHOT');});
