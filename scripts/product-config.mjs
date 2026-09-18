@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 
 export const productModuleKeys = [
-  'shortDrama',
   'advertising',
   'rewards',
   'invitations',
@@ -9,6 +8,9 @@ export const productModuleKeys = [
   'withdrawals',
   'alipayPayout',
 ];
+
+export const contentTypes = ['none', 'shortDrama', 'quiz', 'novel', 'music'];
+export const advertisingProviders = ['none', 'gromore', 'taku'];
 
 function required(value, key) {
   const normalized = String(value ?? '').trim();
@@ -29,6 +31,27 @@ function numericId(value, key) {
   return normalized;
 }
 
+function optionalNumericId(value, key) {
+  const normalized = String(value ?? '').trim();
+  if (normalized && !/^\d+$/.test(normalized)) throw new Error(`${key} 必须是纯数字字符串`);
+  return normalized;
+}
+
+function providerConfig(config, provider, selectedProvider) {
+  const source = config.advertising?.providers?.[provider] ?? {};
+  const readId = selectedProvider === provider ? numericId : optionalNumericId;
+  return {
+    registeredAppName: selectedProvider === provider
+      ? required(source.registeredAppName, `advertising.providers.${provider}.registeredAppName`)
+      : String(source.registeredAppName ?? '').trim(),
+    appId: readId(source.appId, `advertising.providers.${provider}.appId`),
+    splashPlacementId: readId(source.splashPlacementId, `advertising.providers.${provider}.splashPlacementId`),
+    feedPlacementId: readId(source.feedPlacementId, `advertising.providers.${provider}.feedPlacementId`),
+    fullScreenPlacementId: readId(source.fullScreenPlacementId, `advertising.providers.${provider}.fullScreenPlacementId`),
+    rewardPlacementId: readId(source.rewardPlacementId, `advertising.providers.${provider}.rewardPlacementId`),
+  };
+}
+
 export function readProductConfig(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
@@ -42,7 +65,6 @@ export function normalizeAndValidateProductConfig(config) {
       adminTitle: required(config.brand?.adminTitle, 'brand.adminTitle'),
       adminDescription: required(config.brand?.adminDescription, 'brand.adminDescription'),
       companyName: required(config.brand?.companyName, 'brand.companyName'),
-      sdkAppName: required(config.brand?.sdkAppName, 'brand.sdkAppName'),
     },
     android: {
       applicationId: required(config.android?.applicationId, 'android.applicationId'),
@@ -53,21 +75,45 @@ export function normalizeAndValidateProductConfig(config) {
     modules: Object.fromEntries(
       productModuleKeys.map((key) => [key, requiredBoolean(config.modules?.[key], `modules.${key}`)]),
     ),
+    content: {
+      type: required(config.content?.type, 'content.type'),
+      providers: {
+        ...(config.content?.providers?.shortDrama ? {
+          shortDrama: {
+            sdkSettingId: config.content?.type === 'shortDrama'
+              ? numericId(config.content.providers.shortDrama.sdkSettingId, 'content.providers.shortDrama.sdkSettingId')
+              : optionalNumericId(config.content.providers.shortDrama.sdkSettingId, 'content.providers.shortDrama.sdkSettingId'),
+          },
+        } : {}),
+      },
+    },
     domains: {
       productionApiOrigin: required(config.domains?.productionApiOrigin, 'domains.productionApiOrigin').replace(/\/+$/, ''),
     },
     advertising: {
-      gromore: {
-        appId: numericId(config.advertising?.gromore?.appId, 'advertising.gromore.appId'),
-        splashPlacementId: numericId(config.advertising?.gromore?.splashPlacementId, 'advertising.gromore.splashPlacementId'),
-        feedPlacementId: numericId(config.advertising?.gromore?.feedPlacementId, 'advertising.gromore.feedPlacementId'),
-        fullScreenPlacementId: numericId(config.advertising?.gromore?.fullScreenPlacementId, 'advertising.gromore.fullScreenPlacementId'),
-        rewardPlacementId: numericId(config.advertising?.gromore?.rewardPlacementId, 'advertising.gromore.rewardPlacementId'),
+      provider: required(config.advertising?.provider, 'advertising.provider'),
+      providers: {
+        ...(config.advertising?.providers?.gromore ? { gromore: providerConfig(config, 'gromore', config.advertising?.provider) } : {}),
+        ...(config.advertising?.providers?.taku ? { taku: providerConfig(config, 'taku', config.advertising?.provider) } : {}),
       },
     },
   };
 
-  if (product.schemaVersion !== 1) throw new Error('暂不支持该 product.config.json schemaVersion');
+  if (product.schemaVersion !== 2) throw new Error('暂不支持该 product.config.json schemaVersion');
+  if (!contentTypes.includes(product.content.type)) throw new Error(`content.type 必须是：${contentTypes.join(', ')}`);
+  if (product.content.type === 'shortDrama' && !product.content.providers.shortDrama) {
+    throw new Error('content.providers.shortDrama 缺少当前内容插件配置');
+  }
+  if (!advertisingProviders.includes(product.advertising.provider)) throw new Error(`advertising.provider 必须是：${advertisingProviders.join(', ')}`);
+  if (product.advertising.provider !== 'none' && !product.advertising.providers[product.advertising.provider]) {
+    throw new Error(`advertising.providers.${product.advertising.provider} 缺少当前广告平台配置`);
+  }
+  if (product.modules.advertising && product.advertising.provider === 'none') {
+    throw new Error('modules.advertising 启用时 advertising.provider 不能是 none');
+  }
+  if (!product.modules.advertising && product.advertising.provider !== 'none') {
+    throw new Error('modules.advertising 关闭时 advertising.provider 必须是 none');
+  }
   if (!/^[a-z][a-z0-9-]*$/.test(product.productCode)) {
     throw new Error('productCode 只能使用小写字母、数字和连字符，且必须以字母开头');
   }

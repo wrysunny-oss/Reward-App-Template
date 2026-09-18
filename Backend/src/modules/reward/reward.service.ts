@@ -434,7 +434,7 @@ export async function getAdRewardStatus(userId: bigint, transactionId: string) {
     return { status: "FAILED" as const, message: "奖励暂未到账，广告平台可能继续重试", updatedAt: callback.updatedAt };
   }
   // 短剧解锁发币关闭或风控只会取消金币，不撤销已经通过 SSV 的解锁资格。
-  if (callback.status === "SUCCESS" && callback.reason?.startsWith("DRAMA_UNLOCK_")) {
+  if (callback.status === "SUCCESS" && callback.reason?.startsWith("CONTENT_UNLOCK_")) {
     const user = await prisma.user.findUniqueOrThrow({where: {id: userId}, select: {coinBalance: true}});
     return {
       status: "VERIFIED" as const,
@@ -450,7 +450,7 @@ export function issueDramaUnlockAdIntent(userId: bigint, input: {dramaId: string
   const token = createDramaUnlockIntent(userId, input.dramaId, input.episodeIndex);
   return {
     mediaExtra: JSON.stringify({
-      source: "drama_unlock",
+      source: "content_unlock",
       dramaId: input.dramaId,
       episodeIndex: input.episodeIndex,
       token,
@@ -463,7 +463,7 @@ export function issueDramaUnlockAdIntent(userId: bigint, input: {dramaId: string
  * 此接口只查询当前登录用户、最近 24 小时内且来自 GroMore 的第一笔结算，
  * 用广告开始时间建立安全边界，不接受客户端指定奖励金额。
  */
-export async function getLatestAdReward(userId: bigint, after: Date, format: "REWARD" | "DRAMA_UNLOCK" = "REWARD") {
+export async function getLatestAdReward(userId: bigint, after: Date, format: "REWARD" | "CONTENT_UNLOCK" = "REWARD") {
   const earliest = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const effectiveAfter = after < earliest ? earliest : after;
   const settlement = await prisma.adRewardSettlement.findFirst({
@@ -477,12 +477,12 @@ export async function getLatestAdReward(userId: bigint, after: Date, format: "RE
     select: {id: true, requestId: true, awardedCoins: true, milestoneBonusCoins: true, createdAt: true},
   });
   if (!settlement) {
-    if (format !== "DRAMA_UNLOCK") return {status: "PENDING" as const};
+    if (format !== "CONTENT_UNLOCK") return {status: "PENDING" as const};
     // 不发金币的短剧回调没有 settlement，通过 callback 日志仍可证明 SSV 已成功。
     const callbacks = await prisma.adCallbackLog.findMany({
       where: {
         status: "SUCCESS",
-        reason: {startsWith: "DRAMA_UNLOCK_"},
+        reason: {startsWith: "CONTENT_UNLOCK_"},
         createdAt: {gte: effectiveAfter},
       },
       orderBy: {createdAt: "asc"},
@@ -557,7 +557,7 @@ export async function getRewardCenter(userId: bigint) {
     rewardedAdCountToday,
     rewardedAdDailyLimit: adConfig.dailyRewardedAdLimit,
     rewardedVideoRewardEnabled: adConfig.rewardedVideoRewardEnabled,
-    dramaUnlockRewardEnabled: adConfig.dramaUnlockRewardEnabled,
+    contentUnlockRewardEnabled: adConfig.dramaUnlockRewardEnabled,
     rewardedAdMilestones: normalizeRewardMilestones(adConfig.rewardedAdMilestones).map((item) => ({ ...item, progress: item.period === "DAILY" ? rewardedAdCountToday : rewardedAdCountLifetime, completed: milestoneClaimed("ad", item) })),
     inviteMilestones: normalizeRewardMilestones(adConfig.inviteMilestones, 1_000_000).map((item) => ({ ...item, progress: item.period === "DAILY" ? invitedCountToday : invitedCount, completed: milestoneClaimed("invite", item) })),
     goldenWatch,

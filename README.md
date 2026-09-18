@@ -1,12 +1,12 @@
-# 富商剧场
+# Reward App Template
 
-富商剧场是一套包含 Android APP、运营管理后台、Node.js API、MySQL 数据库及 Docker 生产部署配置的短剧运营系统。
+这是从富商剧场稳定基线派生的通用奖励型 APP 模板，包含 Android APP、运营管理后台、Node.js API、MySQL 数据库及 Docker 生产部署配置。短剧是可选内容插件，后续项目可以替换为答题、小说或音乐。
 
 ## 项目组成
 
 | 目录 | 说明 | 主要技术 |
 | --- | --- | --- |
-| `MobileReactNative/` | Android 用户端 | React Native、TypeScript、Kotlin、GroMore |
+| `MobileReactNative/` | Android 用户端 | React Native、TypeScript、Kotlin、广告适配器 |
 | `Admin/` | 运营管理后台 | Vue 3、Vben Admin、Naive UI |
 | `Backend/` | API 与业务服务 | Node.js、Express、Prisma |
 | `deploy/` | 生产环境编排与配置模板 | Docker Compose、MySQL 8.4 |
@@ -70,6 +70,7 @@ npm.cmd test -- --runInBand
 - APP 签名密码只通过本机环境变量或 CI 密钥注入。
 - `src/generated`、`src/contracts` 和 `product.generated.json` 是脚本生成结果，不手动编辑。
 - 修改数据库结构必须创建 Prisma migration，生产环境只执行 `prisma migrate deploy`。
+- 新 APP 继承通用功能和交互契约，但必须根据内容类型重构移动端 UI，并建立自己的 `DESIGN.md`；只替换名称、颜色和图标不算完成模板初始化。
 
 ## 文档维护约定
 

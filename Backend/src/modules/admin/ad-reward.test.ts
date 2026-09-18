@@ -4,7 +4,7 @@ import { calculateAdDistribution, calculateAgentCommission, normalizeRewardMiles
 import { updateAdRewardConfigSchema } from "./admin.schema.js";
 
 test("全局广告配置要求合法的每日次数上限", () => {
-  const valid = { defaultShareRateBps: 5000, directShareRateBps: 1000, indirectShareRateBps: 500, dailyRewardedAdLimit: 5, splashRewardEnabled: false, feedRewardEnabled: false, fullScreenRewardEnabled: false, rewardedVideoRewardEnabled: true, dramaUnlockRewardEnabled: true, rewardedAdMilestones: [{ count: 5, rewardCoins: 100, period: "DAILY" as const }], inviteMilestones: [{ count: 10, rewardCoins: 500, period: "LIFETIME" as const }] };
+  const valid = { defaultShareRateBps: 5000, directShareRateBps: 1000, indirectShareRateBps: 500, dailyRewardedAdLimit: 5, splashRewardEnabled: false, feedRewardEnabled: false, fullScreenRewardEnabled: false, rewardedVideoRewardEnabled: true, contentUnlockRewardEnabled: true, rewardedAdMilestones: [{ count: 5, rewardCoins: 100, period: "DAILY" as const }], inviteMilestones: [{ count: 10, rewardCoins: 500, period: "LIFETIME" as const }] };
   assert.equal(updateAdRewardConfigSchema.safeParse(valid).success, true);
   assert.equal(updateAdRewardConfigSchema.safeParse({ ...valid, dailyRewardedAdLimit: -1 }).success, false);
   assert.equal(updateAdRewardConfigSchema.safeParse({ ...valid, dailyRewardedAdLimit: 1.5 }).success, false);
@@ -25,7 +25,7 @@ test("阶梯任务支持每日和永久周期并过滤非法配置", () => {
 
 test("任务激励与短剧解锁共用每日收益次数限制", () => {
   assert.equal(usesDailyRewardedAdLimit("REWARD"), true);
-  assert.equal(usesDailyRewardedAdLimit("DRAMA_UNLOCK"), true);
+  assert.equal(usesDailyRewardedAdLimit("CONTENT_UNLOCK"), true);
   assert.equal(usesDailyRewardedAdLimit("SPLASH"), false);
   assert.equal(usesDailyRewardedAdLimit("FEED"), false);
   assert.equal(usesDailyRewardedAdLimit("FULL_SCREEN"), false);

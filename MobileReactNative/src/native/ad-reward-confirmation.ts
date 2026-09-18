@@ -8,7 +8,7 @@ export interface PendingAdReward {
   transactionId?: string;
   userId: string;
   startedAt: number;
-  format?: 'REWARD' | 'DRAMA_UNLOCK';
+  format?: 'REWARD' | 'CONTENT_UNLOCK';
 }
 
 async function readAll(): Promise<PendingAdReward[]> {
@@ -36,7 +36,7 @@ async function writeAll(items: PendingAdReward[]) {
 }
 
 /** 保存尚未由服务端确认的 SDK 交易号，支持回调延迟和 App 重启后的补查。 */
-export async function rememberPendingAdReward(userId: string, transactionId: string | undefined, startedAt: number, format: 'REWARD' | 'DRAMA_UNLOCK' = 'REWARD') {
+export async function rememberPendingAdReward(userId: string, transactionId: string | undefined, startedAt: number, format: 'REWARD' | 'CONTENT_UNLOCK' = 'REWARD') {
   const current = await readAll();
   const key = transactionId || `attempt-${userId}-${startedAt}`;
   const next = current.filter(item => item.key !== key);

@@ -21,7 +21,7 @@ import {BrandLoader, ContentLoadingOverlay} from '../../components/BrandLoader';
 import {AppButton, AppCard, EmptyState, SectionHeader, SkeletonBlock} from '../../components/DesignSystem';
 import {PlaybackErrorDialog} from '../../components/PlaybackErrorDialog';
 import {useAppToast} from '../../components/AppToast';
-import {GroMoreFeedAd} from '../../components/GroMoreFeedAd';
+import {AdFeed} from '../../components/AdFeed';
 import {Screen} from '../../components/Screen';
 import {MotionPressable} from '../../components/MotionPressable';
 import {getAdRuntimeConfig} from '../../native/ad-runtime';
@@ -208,7 +208,7 @@ export function HomeScreen() {
   }, []);
 
   const openSlot = async (slot: OperationSlot) => {
-    if (slot.targetType === 'DRAMA' && slot.targetValue) {
+    if (slot.targetType === 'CONTENT' && slot.targetValue) {
       const cachedDrama = data.find(item => item.id === slot.targetValue || item.externalId === slot.targetValue);
       await play(cachedDrama ?? await appApi.drama(slot.targetValue));
     }
@@ -256,7 +256,7 @@ export function HomeScreen() {
               return <Pressable key={`${item.id ?? 'all'}-${item.name}`} onPress={() => selectCategory(item)} style={[styles.category, active && styles.categoryActive]}><Text style={[styles.categoryText, active && styles.categoryTextActive]}>{item.name}</Text></Pressable>;
             })}
           </ScrollView>
-          {loading && !data.length && !recommendations.length ? <><SkeletonBlock style={styles.heroSkeleton} /><View style={styles.skeletonRow}><SkeletonBlock style={styles.cardSkeleton} /><SkeletonBlock style={styles.cardSkeleton} /></View></> : error && !data.length && !recommendations.length ? <EmptyState title="短剧内容加载失败" description={error} action="重新加载" onAction={load} /> : recommendations.length ? <View><ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.heroCarousel} onMomentumScrollEnd={event => setHeroIndex(Math.round(event.nativeEvent.contentOffset.x / HERO_WIDTH))}>{recommendations.map(item => <Pressable key={item.id} disabled={item.targetType === 'NONE'} onPress={() => openSlot(item).catch(() => undefined)} style={({pressed}) => [styles.hero, {width: HERO_WIDTH}, pressed && styles.pressed]}><Image source={{uri: item.imageUrl}} style={styles.heroImage} /><View style={styles.heroShade} /><View style={styles.heroContent}><View style={styles.featuredLabel}><AppIcon name="sparkles" color={colors.primary} size={14} /><Text style={styles.featuredText}>今日精选</Text></View><Text style={styles.heroTitle} numberOfLines={1}>{item.title}</Text><Text style={styles.heroMeta}>{item.targetType === 'DRAMA' ? '精选短剧 · 点击查看详情' : '平台精选内容'}</Text>{item.targetType !== 'NONE' ? <View style={styles.playButton}><Text style={styles.playText}>立即查看</Text><AppIcon name="chevron-right" color="#1B1609" size={14} /></View> : null}</View></Pressable>)}</ScrollView>{recommendations.length > 1 ? <View style={styles.heroDots}>{recommendations.map((item, index) => <View key={item.id} style={[styles.heroDot, index === heroIndex && styles.heroDotActive]} />)}</View> : null}</View> : featured ? (
+          {loading && !data.length && !recommendations.length ? <><SkeletonBlock style={styles.heroSkeleton} /><View style={styles.skeletonRow}><SkeletonBlock style={styles.cardSkeleton} /><SkeletonBlock style={styles.cardSkeleton} /></View></> : error && !data.length && !recommendations.length ? <EmptyState title="内容加载失败" description={error} action="重新加载" onAction={load} /> : recommendations.length ? <View><ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.heroCarousel} onMomentumScrollEnd={event => setHeroIndex(Math.round(event.nativeEvent.contentOffset.x / HERO_WIDTH))}>{recommendations.map(item => <Pressable key={item.id} disabled={item.targetType === 'NONE'} onPress={() => openSlot(item).catch(() => undefined)} style={({pressed}) => [styles.hero, {width: HERO_WIDTH}, pressed && styles.pressed]}><Image source={{uri: item.imageUrl}} style={styles.heroImage} /><View style={styles.heroShade} /><View style={styles.heroContent}><View style={styles.featuredLabel}><AppIcon name="sparkles" color={colors.primary} size={14} /><Text style={styles.featuredText}>今日精选</Text></View><Text style={styles.heroTitle} numberOfLines={1}>{item.title}</Text><Text style={styles.heroMeta}>{item.targetType === 'CONTENT' ? '精选内容 · 点击查看详情' : '平台精选内容'}</Text>{item.targetType !== 'NONE' ? <View style={styles.playButton}><Text style={styles.playText}>立即查看</Text><AppIcon name="chevron-right" color="#1B1609" size={14} /></View> : null}</View></Pressable>)}</ScrollView>{recommendations.length > 1 ? <View style={styles.heroDots}>{recommendations.map((item, index) => <View key={item.id} style={[styles.heroDot, index === heroIndex && styles.heroDotActive]} />)}</View> : null}</View> : featured ? (
             <Pressable onPress={() => play(featured)} style={({pressed}) => [styles.hero, pressed && styles.pressed]}>
               <Image source={{uri: featured.coverUrl}} style={styles.heroImage} /><View style={styles.heroShade} />
               <Pressable accessibilityLabel={favoriteIds.has(featured.id) ? `取消收藏${featured.title}` : `收藏${featured.title}`} disabled={favoriteBusyIds.has(featured.id)} onPress={event => {event.stopPropagation(); toggleFavorite(featured).catch(() => undefined);}} style={({pressed}) => [styles.heroFavoriteButton, favoriteIds.has(featured.id) && styles.favoriteButtonActive, pressed && styles.pressed]}><AppIcon name="heart" color={favoriteIds.has(featured.id) ? colors.primary : '#FFFFFF'} size={20} filled={favoriteIds.has(featured.id)} /></Pressable>
@@ -273,7 +273,7 @@ export function HomeScreen() {
         </View>}
         ListEmptyComponent={!loading && !error ? <EmptyState title="暂无匹配短剧" description="换一个分类看看，更多精彩内容正在更新" /> : null}
         renderItem={({item}) => {
-          if (item.type === 'feed-ad') return <GroMoreFeedAd />;
+          if (item.type === 'feed-ad') return <AdFeed />;
           return (
             <View style={styles.row}>
               {item.dramas.map(drama => <DramaCard key={drama.id} item={drama} favorite={favoriteIds.has(drama.id)} favoriteBusy={favoriteBusyIds.has(drama.id)} onToggleFavorite={() => toggleFavorite(drama)} onPress={() => play(drama)} />)}

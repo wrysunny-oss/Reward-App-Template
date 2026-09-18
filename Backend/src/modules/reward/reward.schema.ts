@@ -32,7 +32,7 @@ export const dramaUnlockAdIntentSchema = z.object({
 /** SDK 偶尔晚于关闭事件返回交易号，允许按广告开始时间补查当前用户结算。 */
 export const latestAdRewardQuerySchema = z.object({
   after: z.coerce.date(),
-  format: z.enum(["REWARD", "DRAMA_UNLOCK"]).default("REWARD"),
+  format: z.enum(["REWARD", "CONTENT_UNLOCK"]).default("REWARD"),
 });
 
 /** 非激励广告只能携带穿山甲加密 eCPM 凭证进行服务端结算。 */

@@ -67,7 +67,7 @@ export function ShareScreen() {
 
           {editing ? <AppCard style={styles.editCard}><Text style={styles.editTitle}>修改邀请码</Text><Text style={styles.editDescription}>支持 6–12 位字母或数字，保存后立即生效</Text><View style={styles.inputWrap}><AppIcon name="edit" color={colors.muted} size={18} /><TextInput style={styles.input} value={code} onChangeText={setCode} autoCapitalize="characters" placeholder="输入新邀请码" placeholderTextColor={colors.subtle} /></View><View style={styles.editActions}><AppButton title="取消" variant="secondary" onPress={() => {setCode(activeCode); setEditing(false);}} style={styles.editButton} /><AppButton title="保存" loading={saving} onPress={save} style={styles.editButton} /></View></AppCard> : <Pressable onPress={() => setEditing(true)} style={({pressed}) => [styles.editEntry, pressed && styles.pressed]}><AppIcon name="edit" color={colors.primary} size={17} /><Text style={styles.editEntryText}>修改我的邀请码</Text></Pressable>}
 
-          <AppButton title="分享给好友" icon="share" onPress={() => Share.share({message: `加入${brandConfig.name}，观看精彩短剧。\n我的邀请码：${activeCode}\n下载地址：${inviteUrl}`})} style={styles.shareButton} />
+          <AppButton title="分享给好友" icon="share" onPress={() => Share.share({message: `加入${brandConfig.name}，体验精彩内容。\n我的邀请码：${activeCode}\n下载地址：${inviteUrl}`})} style={styles.shareButton} />
           <AppCard style={styles.relationCard}>
             <AppListRow
               icon="users"

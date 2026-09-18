@@ -71,7 +71,7 @@ import * as contentAdminService from "../content/content.admin.service.js";
 import { imageUpload, removeStoredImage, storeImage } from "../../services/local-image-storage.js";
 import { sendNotificationSchema } from "../notification/notification.schema.js";
 import * as notificationService from "../notification/notification.service.js";
-import { productModules } from "../../generated/product.generated.js";
+import { contentType, productModules } from "../../generated/product.generated.js";
 
 const router = Router();
 
@@ -86,7 +86,7 @@ router.use(denyAgentWrites);
 
 /** 后台菜单隐藏之外再做服务端兜底，防止通过旧书签或手工请求访问已关闭模块。 */
 const adminModuleRules: Array<{ enabled: boolean; paths: RegExp[] }> = [
-  { enabled: productModules.shortDrama, paths: [/^\/content-center(?:\/|$)/, /^\/sdk-health(?:\/|$)/] },
+  { enabled: contentType === "shortDrama", paths: [/^\/content-center(?:\/|$)/, /^\/sdk-health(?:\/|$)/] },
   { enabled: productModules.advertising, paths: [/^\/ad-(?:reward|callback|events|runtime)/, /^\/users\/[^/]+\/ad-share-rate$/] },
   { enabled: productModules.rewards, paths: [/^\/ad-reward/, /^\/coin-ledgers$/, /^\/reward-rules(?:\/|$)/, /^\/check-in-records(?:\/|$)/] },
   { enabled: productModules.invitations, paths: [/^\/agent-overview$/, /^\/invite-relations(?:\/|$)/, /^\/users\/[^/]+\/(?:agent-share-rate|team)$/] },

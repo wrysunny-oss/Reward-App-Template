@@ -1,4 +1,4 @@
-name: hanle-theater
+name: reward-app-template
 
 services:
   mysql:

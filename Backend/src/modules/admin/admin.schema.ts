@@ -45,7 +45,7 @@ export const settleAdRewardSchema = z.object({
   userId: z.coerce.bigint().positive(),
   revenueYuan: z.string().trim().regex(/^\d+(\.\d{1,6})?$/, "广告收入必须是最多 6 位小数的人民币金额"),
   source: z.string().trim().min(1).max(30).default("PANGLE"),
-  format: z.enum(["SPLASH", "FEED", "FULL_SCREEN", "REWARD", "DRAMA_UNLOCK"]).default("REWARD"),
+  format: z.enum(["SPLASH", "FEED", "FULL_SCREEN", "REWARD", "CONTENT_UNLOCK"]).default("REWARD"),
 });
 export const adSettlementListSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),

@@ -7,14 +7,14 @@
 在 `MobileReactNative` 目录执行：
 
 ```powershell
-cd D:\Project\HanLe-Theater-vscode\MobileReactNative\android
+cd D:\Project\Reward-App-Template\MobileReactNative\android
 .\gradlew.bat :app:dependencies --configuration debugRuntimeClasspath --refresh-dependencies
 ```
 
 若只希望预下载并验证编译依赖：
 
 ```powershell
-cd D:\Project\HanLe-Theater-vscode\MobileReactNative\android
+cd D:\Project\Reward-App-Template\MobileReactNative\android
 .\gradlew.bat :app:compileDebugKotlin --refresh-dependencies --stacktrace
 ```
 

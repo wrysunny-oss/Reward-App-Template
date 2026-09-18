@@ -24,7 +24,7 @@ import {
   RewardSuccessDialog,
   type RewardReceipt,
 } from '../../components/RewardSuccessDialog';
-import { groMoreNative } from '../../native/gromore';
+import { adProvider } from '../../native/ad-provider';
 import {
   forgetPendingAdReward,
   getPendingAdRewards,
@@ -40,7 +40,7 @@ import type {
   RewardMilestone,
 } from '../../types/api';
 import { useAuthStore } from '../../stores/auth';
-import { productModules } from '../../config/modules';
+import { isShortDramaEnabled, productModules } from '../../config/modules';
 
 const FALLBACK_REWARDS = [10, 15, 20, 25, 30, 40, 60];
 // 前 2.2 秒密集确认，随后逐步退避；数组表示相邻两次查询间隔。
@@ -253,9 +253,9 @@ export function TasksScreen() {
           completedCount: rewardCenter.rewardedAdCountToday,
           dailyLimit: rewardCenter.rewardedAdDailyLimit,
           description:
-            item.format === 'DRAMA_UNLOCK' ? '解锁剧集广告收益' : undefined,
+            item.format === 'CONTENT_UNLOCK' ? '内容解锁广告收益' : undefined,
           progressLabel:
-            item.format === 'DRAMA_UNLOCK' ? '今日激励收益' : undefined,
+            item.format === 'CONTENT_UNLOCK' ? '今日激励收益' : undefined,
         });
         break;
       }
@@ -355,11 +355,11 @@ export function TasksScreen() {
       !rewardedVideoEnabled ||
       (dailyAdLimit > 0 && completedAds >= dailyAdLimit) ||
       adOperationActive.current ||
-      groMoreNative.state !== 'idle'
+      adProvider.state !== 'idle'
     ) return;
 
     const version = ++preloadVersion.current;
-    const pending = groMoreNative.loadReward(
+    const pending = adProvider.loadReward(
       profile.id,
       JSON.stringify({ source: 'benefits', userId: profile.id }),
       'REWARD',
@@ -367,7 +367,7 @@ export function TasksScreen() {
     preloadPromise.current = pending;
     pending.then(() => {
       if (version !== preloadVersion.current || !isFocused) {
-        groMoreNative.dispose();
+        adProvider.dispose();
         return;
       }
       setAdState('ready');
@@ -381,8 +381,8 @@ export function TasksScreen() {
     return () => {
       preloadVersion.current += 1;
       if (preloadPromise.current === pending) preloadPromise.current = undefined;
-      if (!adOperationActive.current && groMoreNative.state !== 'showing') {
-        groMoreNative.dispose();
+      if (!adOperationActive.current && adProvider.state !== 'showing') {
+        adProvider.dispose();
         setAdState('idle');
       }
     };
@@ -416,9 +416,9 @@ export function TasksScreen() {
           startConfirmation().catch(() => undefined);
         },
       };
-      if (adState !== 'ready' && groMoreNative.state !== 'ready') {
+      if (adState !== 'ready' && adProvider.state !== 'ready') {
         setAdState('loading');
-        const adPreparation = preloadPromise.current ?? groMoreNative.loadReward(
+        const adPreparation = preloadPromise.current ?? adProvider.loadReward(
           profile.id,
           JSON.stringify({ source: 'benefits', userId: profile.id }),
           'REWARD',
@@ -428,15 +428,15 @@ export function TasksScreen() {
           ensureRiskAssessment('reward'),
           adPreparation,
         ]);
-        groMoreNative.setRewardLifecycle(lifecycle);
+        adProvider.setRewardLifecycle(lifecycle);
         setAdState('ready');
       } else {
-        groMoreNative.setRewardLifecycle(lifecycle);
+        adProvider.setRewardLifecycle(lifecycle);
         setAdState('checking');
         await ensureRiskAssessment('reward');
       }
       setAdState('showing');
-      const result = await groMoreNative.showReward();
+      const result = await adProvider.showReward();
       if (result.transactionId) rewardTransactionId = result.transactionId;
       const hasRewardSignal =
         result.completed ||
@@ -544,8 +544,8 @@ export function TasksScreen() {
     } finally {
       if (!confirmationContinuesInBackground) {
         adOperationActive.current = false;
-        setAdState(groMoreNative.state === 'ready' ? 'ready' : 'idle');
-        if (groMoreNative.state === 'idle') setPreloadRequest(current => current + 1);
+        setAdState(adProvider.state === 'ready' ? 'ready' : 'idle');
+        if (adProvider.state === 'idle') setPreloadRequest(current => current + 1);
       }
     }
   };
@@ -692,7 +692,7 @@ export function TasksScreen() {
                 action={rewardedVideoEnabled ? adAction : '未开放'}
                 onPress={rewardedVideoEnabled ? watchRewardAd : undefined}
               /></> : null}
-              {productModules.shortDrama ? <TaskCard
+              {isShortDramaEnabled ? <TaskCard
                 icon="clock"
                 title="黄金时段观剧"
                 description={goldenPeriods}

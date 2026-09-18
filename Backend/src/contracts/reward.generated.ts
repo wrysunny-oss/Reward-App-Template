@@ -18,7 +18,7 @@ export const updateAdRewardConfigBaseSchema = z.object({
   feedRewardEnabled: z.boolean(),
   fullScreenRewardEnabled: z.boolean(),
   rewardedVideoRewardEnabled: z.boolean(),
-  dramaUnlockRewardEnabled: z.boolean(),
+  contentUnlockRewardEnabled: z.boolean(),
   rewardedAdMilestones: createRewardMilestoneSchema(1000).array().max(20),
   inviteMilestones: createRewardMilestoneSchema(1000000).array().max(20),
 });

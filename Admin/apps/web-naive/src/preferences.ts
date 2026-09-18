@@ -1,6 +1,7 @@
 import {
   defineOverridesPreferences,
 } from '@vben/preferences';
+import { productConfig } from './config/product.generated';
 
 /**
  * @description 项目配置文件
@@ -13,7 +14,7 @@ export const overridesPreferences = defineOverridesPreferences({
     accessMode: 'frontend',
     defaultHomePath: '/dashboard/overview',
     enableRefreshToken: true,
-    name: import.meta.env.VITE_APP_TITLE,
+    name: productConfig.brand.adminTitle,
   },
   copyright: {
     companyName: '',

@@ -1,22 +1,20 @@
 // 此文件由 scripts/sync-product-config.mjs 自动生成，请勿手动修改。
 export const productConfig = {
-  "schemaVersion": 1,
-  "productCode": "fushang-theater",
+  "schemaVersion": 2,
+  "productCode": "reward-app-template",
   "brand": {
-    "appDisplayName": "富商剧场",
-    "adminTitle": "富商剧场管理后台",
-    "adminDescription": "富商剧场运营管理后台",
-    "companyName": "南通江满科技",
-    "sdkAppName": "富商笔记"
+    "appDisplayName": "奖励应用模板",
+    "adminTitle": "奖励应用模板管理后台",
+    "adminDescription": "通用奖励型应用运营管理后台",
+    "companyName": "示例公司"
   },
   "android": {
-    "applicationId": "com.clound.note"
+    "applicationId": "com.example.rewardapp"
   },
   "admin": {
-    "namespace": "hanle-theater-admin"
+    "namespace": "reward-app-template-admin"
   },
   "modules": {
-    "shortDrama": true,
     "advertising": true,
     "rewards": true,
     "invitations": true,
@@ -24,16 +22,28 @@ export const productConfig = {
     "withdrawals": true,
     "alipayPayout": true
   },
+  "content": {
+    "type": "shortDrama",
+    "providers": {
+      "shortDrama": {
+        "sdkSettingId": "000000"
+      }
+    }
+  },
   "domains": {
-    "productionApiOrigin": "https://api.nantongjiangnan.cn"
+    "productionApiOrigin": "https://api.example.com"
   },
   "advertising": {
-    "gromore": {
-      "appId": "5879132",
-      "splashPlacementId": "104516017",
-      "feedPlacementId": "104517426",
-      "fullScreenPlacementId": "104516612",
-      "rewardPlacementId": "104489019"
+    "provider": "gromore",
+    "providers": {
+      "gromore": {
+        "registeredAppName": "待配置广告应用",
+        "appId": "000000",
+        "splashPlacementId": "000000",
+        "feedPlacementId": "000000",
+        "fullScreenPlacementId": "000000",
+        "rewardPlacementId": "000000"
+      }
     }
   }
 } as const;
@@ -41,3 +51,7 @@ export const productConfig = {
 export const productModules = productConfig.modules;
 export type ProductModuleKey = keyof typeof productModules;
 export type ProductModules = Record<ProductModuleKey, boolean>;
+export type ContentType = 'music' | 'none' | 'novel' | 'quiz' | 'shortDrama';
+export const contentType: ContentType = productConfig.content.type;
+export type AdvertisingProvider = 'gromore' | 'none' | 'taku';
+export const advertisingProvider: AdvertisingProvider = productConfig.advertising.provider;

@@ -4,7 +4,7 @@ import { renderDownloadPage, renderInvitePage } from "./invite-page.js";
 
 test("download page works without an invite code", () => {
   const html = renderDownloadPage({
-    brandName: "富商剧场",
+    brandName: "奖励应用模板",
     release: {
       versionName: "1.0.0",
       versionCode: 1,
@@ -18,7 +18,7 @@ test("download page works without an invite code", () => {
 
 test("invite page renders the latest HTTPS download and invite code", () => {
   const html = renderInvitePage({
-    brandName: "富商剧场",
+    brandName: "奖励应用模板",
     inviteCode: "ABC123",
     release: {
       versionName: "1.2.0",

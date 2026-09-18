@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: hanle_theater
+      MYSQL_DATABASE: reward_app_template
       TZ: Asia/Shanghai
     ports:
       - "3306:3306"

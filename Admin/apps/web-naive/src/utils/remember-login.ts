@@ -1,9 +1,10 @@
 import { createSecureStorage } from '@vben/stores';
+import { productConfig } from '#/config/product.generated';
 
 const STORAGE_KEY = 'admin-login-credentials';
 const ACCOUNT_KEY = `REMEMBER_ME_USERNAME_${location.hostname}`;
 const storage = createSecureStorage(
-  `${import.meta.env.VITE_APP_NAMESPACE}-login-credentials-meta`,
+  `${productConfig.admin.namespace}-login-credentials-meta`,
 );
 
 export interface RememberedLogin {

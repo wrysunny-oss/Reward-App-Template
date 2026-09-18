@@ -12,7 +12,7 @@ import {colors, spacing, typography} from '../../theme';
 import {useAppDialog} from '../../components/AppDialog';
 import {brandConfig} from '../../config/brand';
 
-const DEFAULT_ABOUT_CONTENT = `${brandConfig.name}是一款短剧与福利应用。当前移动端使用 React Native 重构，业务数据由 Express 后端统一提供。`;
+const DEFAULT_ABOUT_CONTENT = `${brandConfig.name}是一款内容与福利应用。账号、奖励和内容数据由服务端统一提供。`;
 
 export function SettingsScreen() {
   const navigation = useNavigation<any>();

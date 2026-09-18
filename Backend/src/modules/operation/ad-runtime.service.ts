@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import type { Request } from "express";
 import { prisma } from "../../lib/prisma.js";
-import { env } from "../../config.js";
+import {advertisingProvider, productConfig, productModules} from "../../generated/product.generated.js";
 import {
   adRuntimeConfigSchema,
   type AdRuntimeConfig,
@@ -10,32 +10,28 @@ import {
 
 export const AD_RUNTIME_CONFIG_KEY = "ads.runtime_config";
 
+type ProviderPlacementConfig = {
+  splashPlacementId: string;
+  feedPlacementId: string;
+  fullScreenPlacementId: string;
+  rewardPlacementId: string;
+};
+const providerConfigs = productConfig.advertising.providers as Partial<Record<string, ProviderPlacementConfig>>;
+const providerConfig = providerConfigs[advertisingProvider];
+
 export const defaultAdRuntimeConfig: AdRuntimeConfig = {
-  enabled: true,
-  splash: { enabled: true, placementId: "104516017", timeoutMs: 3000, safetyTimeoutMs: 5000 },
-  feed: { enabled: true, placementId: "104517426", insertEvery: 8 },
+  enabled: productModules.advertising,
+  splash: { enabled: true, placementId: providerConfig?.splashPlacementId ?? "000000", timeoutMs: 3000, safetyTimeoutMs: 5000 },
+  feed: { enabled: true, placementId: providerConfig?.feedPlacementId ?? "000000", insertEvery: 8 },
   fullScreen: {
     enabled: true,
-    placementId: "104516612",
+    placementId: providerConfig?.fullScreenPlacementId ?? "000000",
     playbackThreshold: 5,
     minimumIntervalMinutes: 20,
     loadTimeoutMs: 8000,
     showTimeoutMs: 120000,
   },
-  reward: { enabled: true, placementId: env.PANGLE_GROMORE_REWARDED_PLACEMENT_ID },
-  drama: {
-    unlockMode: "SPECIFIC",
-    freeEpisodes: 10,
-    unlockEpisodes: 10,
-    continuousUnlock: false,
-    hideRewardDialog: false,
-    hideCellularToast: false,
-    hideLikeButton: false,
-    hideFavorButton: false,
-    hideDoubleClick: false,
-    hideLongClickSpeed: false,
-    infiniteScrollEnabled: true,
-  },
+  reward: { enabled: true, placementId: providerConfig?.rewardPlacementId ?? "000000" },
 };
 
 export async function getAdRuntimeConfig() {
@@ -46,10 +42,6 @@ export async function getAdRuntimeConfig() {
   const parsed = adRuntimeConfigSchema.safeParse({
     ...defaultAdRuntimeConfig,
     ...value,
-    drama: {
-      ...defaultAdRuntimeConfig.drama,
-      ...(value.drama && typeof value.drama === "object" && !Array.isArray(value.drama) ? value.drama : {}),
-    },
   });
   return parsed.success ? parsed.data : defaultAdRuntimeConfig;
 }

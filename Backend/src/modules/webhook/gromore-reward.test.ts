@@ -22,8 +22,8 @@ test("GroMore 非激励广告加密 eCPM 能验真且拒绝篡改价格", () => 
   const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 1024 });
   const input = {
     format: "SPLASH" as const,
-    placementId: "104516017",
-    slotId: "104516017",
+    placementId: "000000",
+    slotId: "000000",
     requestId: "request-verified-001",
     ecpm: "123.45",
     adnName: "pangle",

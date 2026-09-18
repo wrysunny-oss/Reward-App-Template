@@ -34,8 +34,8 @@ export default function App() {
     };
   }, [userId]);
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme="huanyue">
-      <Theme name="huanyue">
+    <TamaguiProvider config={tamaguiConfig} defaultTheme="rewardApp">
+      <Theme name="rewardApp">
         <SafeAreaProvider>
           <StatusBar
             barStyle="light-content"

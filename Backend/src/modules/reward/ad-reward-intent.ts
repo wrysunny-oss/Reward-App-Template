@@ -3,7 +3,7 @@ import { env } from "../../config.js";
 
 type DramaUnlockIntent = {
   version: 1;
-  purpose: "DRAMA_UNLOCK";
+  purpose: "CONTENT_UNLOCK";
   userId: string;
   dramaId: string;
   episodeIndex: number;
@@ -18,7 +18,7 @@ function sign(payload: string) {
 export function createDramaUnlockIntent(userId: bigint, dramaId: string, episodeIndex: number) {
   const intent: DramaUnlockIntent = {
     version: 1,
-    purpose: "DRAMA_UNLOCK",
+    purpose: "CONTENT_UNLOCK",
     userId: userId.toString(),
     dramaId,
     episodeIndex,
@@ -38,7 +38,7 @@ export function verifyDramaUnlockIntent(token: string, userId: bigint) {
   if (actualBuffer.length !== expectedBuffer.length || !timingSafeEqual(actualBuffer, expectedBuffer)) return null;
   try {
     const intent = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as DramaUnlockIntent;
-    if (intent.version !== 1 || intent.purpose !== "DRAMA_UNLOCK" || intent.userId !== userId.toString() || intent.expiresAt < Date.now()) return null;
+    if (intent.version !== 1 || intent.purpose !== "CONTENT_UNLOCK" || intent.userId !== userId.toString() || intent.expiresAt < Date.now()) return null;
     if (!/^\d+$/.test(intent.dramaId) || !Number.isInteger(intent.episodeIndex) || intent.episodeIndex < 1) return null;
     return intent;
   } catch {

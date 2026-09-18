@@ -3,7 +3,7 @@ import type { Request } from "express";
 import { env } from "../../config.js";
 import { AppError } from "../../lib/http.js";
 import { prisma } from "../../lib/prisma.js";
-import { settleAdReward } from "../admin/admin.service.js";
+import { settleRewardEvent, type RewardEvent } from "../advertising/reward-event.js";
 import type { GroMoreRewardQuery } from "./webhook.schema.js";
 import { verifyDramaUnlockIntent } from "../reward/ad-reward-intent.js";
 import { getAdRuntimeConfig } from "../operation/ad-runtime.service.js";
@@ -40,7 +40,15 @@ export async function receivePangleAdRevenue(input: { eventId: string; userId: b
     update: { status: "PROCESSING", reason: null, payload: { ...input, userId: input.userId.toString() }, ip: request.ip },
   });
   try {
-    const settlement = await settleAdReward(null, { ...input, requestId: input.eventId }, request);
+    const event: RewardEvent = {
+      provider: "pangle",
+      eventId: input.eventId,
+      userId: input.userId,
+      revenueYuan: input.revenueYuan,
+      source: input.source,
+      format: "REWARD",
+    };
+    const settlement = await settleRewardEvent(event, request);
     await prisma.adCallbackLog.update({ where: { eventId: input.eventId }, data: { status: "SUCCESS" } });
     return { eventId: input.eventId, settlementId: settlement.id, status: "SUCCESS", duplicate: false };
   } catch (error) {
@@ -89,12 +97,12 @@ function groMoreRewardContext(extra: string | undefined, userId: bigint) {
   if (!extra) return { format: "REWARD" as const };
   try {
     const value = JSON.parse(extra) as Record<string, unknown>;
-    if (value.source !== "drama_unlock") return { format: "REWARD" as const };
+    if (value.source !== "content_unlock") return { format: "REWARD" as const };
     const intent = verifyDramaUnlockIntent(String(value.token ?? ""), userId);
     if (!intent || intent.dramaId !== String(value.dramaId ?? "") || intent.episodeIndex !== Number(value.episodeIndex ?? 0)) {
-      return { format: "INVALID_DRAMA_UNLOCK" as const };
+      return { format: "INVALID_CONTENT_UNLOCK" as const };
     }
-    return { format: "DRAMA_UNLOCK" as const, dramaId: intent.dramaId, episodeIndex: intent.episodeIndex };
+    return { format: "CONTENT_UNLOCK" as const, contentType: "shortDrama" as const, contentId: intent.dramaId, unitId: String(intent.episodeIndex) };
   } catch {
     return { format: "REWARD" as const };
   }
@@ -159,23 +167,41 @@ export async function receiveGroMoreReward(input: GroMoreRewardQuery, request: R
   try {
     const source = `GROMORE:${input.adn_name || "UNKNOWN"}`.slice(0, 30);
     const context = groMoreRewardContext(input.extra, input.user_id);
-    if (context.format === "INVALID_DRAMA_UNLOCK") {
-      throw new Error("短剧解锁广告意图签名无效或已过期");
+    if (context.format === "INVALID_CONTENT_UNLOCK") {
+      throw new Error("内容解锁广告意图签名无效或已过期");
     }
-    if (context.format === "DRAMA_UNLOCK") {
+    if (context.format === "CONTENT_UNLOCK") {
       const config = await prisma.adRewardConfig.upsert({ where: { id: 1 }, create: { id: 1 }, update: {} });
       // 关闭“短剧解锁发币”只影响平台金币分成，不能让已经完整观看广告的用户解锁失败。
       if (!config.dramaUnlockRewardEnabled) {
-        await prisma.adCallbackLog.update({ where: { eventId }, data: { status: "SUCCESS", reason: "DRAMA_UNLOCK_REWARD_DISABLED" } });
+        await prisma.adCallbackLog.update({ where: { eventId }, data: { status: "SUCCESS", reason: "CONTENT_UNLOCK_REWARD_DISABLED" } });
         return { is_verify: true, reason: 20000 };
       }
     }
     try {
-      await settleAdReward(null, { requestId: eventId, userId: input.user_id, revenueYuan: groMoreEcpmToRevenueYuan(input.ecpm), source, format: context.format, enforceDailyLimit: true }, request);
+      const event: RewardEvent = {
+        provider: "gromore",
+        eventId,
+        userId: input.user_id,
+        placementId: input.prime_rit,
+        revenueYuan: groMoreEcpmToRevenueYuan(input.ecpm),
+        source,
+        format: context.format,
+        enforceDailyLimit: true,
+        ...(context.format === "CONTENT_UNLOCK" ? {
+          context: {
+            purpose: "CONTENT_UNLOCK" as const,
+            contentType: context.contentType,
+            contentId: context.contentId,
+            unitId: context.unitId,
+          },
+        } : {}),
+      };
+      await settleRewardEvent(event, request);
     } catch (error) {
       // 风控或运营策略只限制金币，不撤销用户已经通过完整观看取得的剧集解锁资格。
-      if (context.format === "DRAMA_UNLOCK" && error instanceof AppError && [3401, 3402, 3410, 3411].includes(error.code)) {
-        await prisma.adCallbackLog.update({ where: { eventId }, data: { status: "SUCCESS", reason: `DRAMA_UNLOCK_NO_COIN:${error.code}` } });
+      if (context.format === "CONTENT_UNLOCK" && error instanceof AppError && [3401, 3402, 3410, 3411].includes(error.code)) {
+        await prisma.adCallbackLog.update({ where: { eventId }, data: { status: "SUCCESS", reason: `CONTENT_UNLOCK_NO_COIN:${error.code}` } });
         return { is_verify: true, reason: 20000 };
       }
       throw error;

@@ -8,12 +8,12 @@ import {Screen} from '../../components/Screen';
 import {useAuthStore} from '../../stores/auth';
 import {colors, radii, spacing, typography} from '../../theme';
 import {useAppDialog} from '../../components/AppDialog';
-import {productModules} from '../../config/modules';
+import {isShortDramaEnabled, productModules} from '../../config/modules';
 
 const quickActions: Array<{label: string; route: string; icon: AppIconName}> = [
   ...(productModules.withdrawals ? [{label: '金币提现', route: 'Withdrawal', icon: 'wallet' as AppIconName}] : []),
   ...(productModules.invitations ? [{label: '邀请好友', route: 'Share', icon: 'user-plus' as AppIconName}] : []),
-  ...(productModules.shortDrama ? [
+  ...(isShortDramaEnabled ? [
     {label: '我的收藏', route: 'Favorites', icon: 'heart' as AppIconName},
     {label: '观看历史', route: 'History', icon: 'history' as AppIconName},
   ] : []),

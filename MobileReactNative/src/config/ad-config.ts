@@ -1,27 +1,46 @@
 import productConfig from '../../product.generated.json';
 
-/** GroMore 聚合广告位。客户端请求使用广告位 ID，不使用瀑布流中的代码位 ID。 */
+export type AdvertisingProviderName = 'none' | 'gromore' | 'taku';
+type ProviderPlacementConfig = {
+  registeredAppName: string;
+  appId: string;
+  splashPlacementId: string;
+  feedPlacementId: string;
+  fullScreenPlacementId: string;
+  rewardPlacementId: string;
+};
+
+const provider = productConfig.advertising.provider as AdvertisingProviderName;
+const providers = productConfig.advertising.providers as Partial<Record<AdvertisingProviderName, ProviderPlacementConfig>>;
+const selected = providers[provider];
+
+if (provider !== 'none' && !selected) {
+  throw new Error(`广告平台 ${provider} 缺少客户端配置`);
+}
+
+/** 平台无关广告配置；业务代码不得直接读取某个厂商节点。 */
 export const adConfig = {
-  appId: productConfig.advertising.gromore.appId,
-  /** 必须与穿山甲后台登记的应用名称一致，不跟随 APP 展示名称变化。 */
-  sdkAppName: productConfig.brand.sdkAppName,
+  provider,
+  appId: selected?.appId ?? '',
+  /** 必须与广告平台后台登记的应用名称一致，不跟随 APP 展示名称变化。 */
+  sdkAppName: selected?.registeredAppName ?? '',
   splash: {
-    placementId: productConfig.advertising.gromore.splashPlacementId,
+    placementId: selected?.splashPlacementId ?? '',
     timeoutMs: 3000,
     safetyTimeoutMs: 5000,
   },
   feed: {
-    placementId: productConfig.advertising.gromore.feedPlacementId,
+    placementId: selected?.feedPlacementId ?? '',
     insertEvery: 8,
   },
   fullScreen: {
-    placementId: productConfig.advertising.gromore.fullScreenPlacementId,
+    placementId: selected?.fullScreenPlacementId ?? '',
     playbackThreshold: 5,
     minimumIntervalMs: 20 * 60 * 1000,
     loadTimeoutMs: 8000,
     showTimeoutMs: 2 * 60 * 1000,
   },
   reward: {
-    placementId: productConfig.advertising.gromore.rewardPlacementId,
+    placementId: selected?.rewardPlacementId ?? '',
   },
 } as const;

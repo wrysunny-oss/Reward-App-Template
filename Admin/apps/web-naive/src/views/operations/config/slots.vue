@@ -1,14 +1,18 @@
 <script lang="ts" setup>
 import type { UploadCustomRequestOptions } from 'naive-ui';
+
 import type { OperationSlot } from '#/api';
 
 import { computed, h, onMounted, reactive, ref } from 'vue';
+
 import { useAccess } from '@vben/access';
 import { Page } from '@vben/common-ui';
+
 import {
   NButton, NCard, NDataTable, NDatePicker, NForm, NFormItem, NImage, NInput,
   NInputNumber, NModal, NSelect, NSpace, NSwitch, NTag, NUpload, useDialog, useMessage,
 } from 'naive-ui';
+
 import {
   createOperationSlotApi, deleteOperationSlotApi, getOperationSlotsApi,
   updateOperationSlotApi, uploadOperationImageApi,
@@ -28,15 +32,15 @@ const visible = ref(false);
 const previewVisible = ref(false);
 const editingId = ref('');
 const previewRow = ref<OperationSlot>();
-const activeFilter = ref<'ALL' | 'ACTIVE' | 'DISABLED' | 'EXPIRED' | 'UPCOMING'>('ALL');
+const activeFilter = ref<'ACTIVE' | 'ALL' | 'DISABLED' | 'EXPIRED' | 'UPCOMING'>('ALL');
 const range = ref<[number, number] | null>(null);
 const blank = (): Omit<OperationSlot, 'id'> => ({ placement: 'HOME_RECOMMEND', title: '', imageUrl: '', targetType: 'NONE', targetValue: null, sort: 0, enabled: true, startAt: null, endAt: null });
 const form = reactive<Omit<OperationSlot, 'id'>>(blank());
 const placements = [{ label: '首页推荐', value: 'HOME_RECOMMEND' }, { label: '启动弹窗', value: 'STARTUP_POPUP' }];
-const targets = [{ label: '无跳转', value: 'NONE' }, { label: '短剧详情', value: 'DRAMA' }, { label: 'App 内页面', value: 'INTERNAL' }, { label: '外部链接', value: 'EXTERNAL' }];
+const targets = [{ label: '无跳转', value: 'NONE' }, { label: '内容详情', value: 'CONTENT' }, { label: 'App 内页面', value: 'INTERNAL' }, { label: '外部链接', value: 'EXTERNAL' }];
 const statusOptions = [{label: '全部状态', value: 'ALL'}, {label: '生效中', value: 'ACTIVE'}, {label: '待生效', value: 'UPCOMING'}, {label: '已过期', value: 'EXPIRED'}, {label: '已停用', value: 'DISABLED'}];
 const placementText: Record<string, string> = {HOME_BANNER: '旧版首页展示位', HOME_RECOMMEND: '首页推荐', STARTUP_POPUP: '启动弹窗'};
-const targetText: Record<string, string> = {NONE: '无跳转', DRAMA: '短剧详情', INTERNAL: 'App 内页面', EXTERNAL: '外部链接'};
+const targetText: Record<string, string> = {NONE: '无跳转', CONTENT: '内容详情', INTERNAL: 'App 内页面', EXTERNAL: '外部链接'};
 const imageTip = computed(() => form.placement === 'STARTUP_POPUP' ? '启动弹窗建议 4:5 竖图，主体居中并预留四周安全区' : '首页推荐建议 3:2 横图，避免在图片内放置小字号文字');
 
 function slotStatus(row: OperationSlot) {
@@ -64,7 +68,7 @@ function validate() {
   if (!form.title.trim() || !form.imageUrl.trim()) return '标题和图片不能为空';
   if (form.targetType !== 'NONE' && !form.targetValue?.trim()) return '当前跳转类型必须填写跳转目标';
   if (form.targetType === 'EXTERNAL' && !/^https:\/\//i.test(form.targetValue ?? '')) return '外部链接必须使用 HTTPS 地址';
-  if (form.targetType === 'DRAMA' && !/^\d+$/.test(form.targetValue ?? '')) return '短剧详情目标必须填写数字内容 ID';
+  if (form.targetType === 'CONTENT' && !/^\d+$/.test(form.targetValue ?? '')) return '内容详情目标必须填写数字内容 ID';
   return '';
 }
 async function save() {
@@ -122,7 +126,7 @@ onMounted(load);
         <NFormItem label="标题"><NInput v-model:value="form.title" maxlength="100" show-count /></NFormItem>
         <NFormItem label="图片"><div class="w-full"><NUpload v-if="canUpload" accept="image/jpeg,image/png,image/webp,image/gif" :custom-request="upload" :max="1"><NButton>上传图片</NButton></NUpload><div class="mt-2 text-xs text-gray-500">{{ imageTip }}</div><NInput v-model:value="form.imageUrl" class="mt-2" placeholder="HTTPS 图片地址，或点击上方上传" /><NImage v-if="form.imageUrl" class="mt-3 overflow-hidden rounded-lg" :src="resolveAssetUrl(form.imageUrl)" width="240" height="130" object-fit="cover" /></div></NFormItem>
         <NFormItem label="跳转类型"><NSelect v-model:value="form.targetType" :options="targets" @update:value="value => value === 'NONE' && (form.targetValue = null)" /></NFormItem>
-        <NFormItem v-if="form.targetType !== 'NONE'" label="跳转目标"><NInput v-model:value="form.targetValue" :placeholder="form.targetType === 'DRAMA' ? '短剧内容 ID' : form.targetType === 'EXTERNAL' ? 'https://example.com' : 'App 路由名称'" /></NFormItem>
+        <NFormItem v-if="form.targetType !== 'NONE'" label="跳转目标"><NInput v-model:value="form.targetValue" :placeholder="form.targetType === 'CONTENT' ? '内容 ID' : form.targetType === 'EXTERNAL' ? 'https://example.com' : 'App 路由名称'" /></NFormItem>
         <NFormItem label="展示时间"><NDatePicker v-model:value="range" type="datetimerange" clearable class="w-full" /></NFormItem>
         <NFormItem label="排序"><NInputNumber v-model:value="form.sort" class="w-full" /></NFormItem>
         <NFormItem label="启用"><NSwitch v-model:value="form.enabled" /></NFormItem>

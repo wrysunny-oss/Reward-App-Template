@@ -3,8 +3,9 @@ import {apiRequest} from '../api/client';
 import {appApi} from '../api/app';
 import {useAuthStore} from '../stores/auth';
 import {dramaNative, type DramaLibrarySnapshot, type DramaPlaybackEvent} from './drama';
-import {groMoreNative} from './gromore';
+import {adProvider} from './ad-provider';
 import {getAdRuntimeConfig} from './ad-runtime';
+import {getShortDramaRuntimeConfig} from './short-drama-runtime';
 import {rememberGoldenWatchReward} from './golden-watch-reward';
 import {forgetPendingAdReward, rememberPendingAdReward} from './ad-reward-confirmation';
 import type {GoldenWatchProgressResult, SdkLibrarySyncInput} from '../types/api';
@@ -116,12 +117,12 @@ async function handleUnlockAdRequest(event: DramaPlaybackEvent) {
       appApi.dramaUnlockAdIntent({dramaId: event.externalId, episodeIndex: event.episodeIndex}),
       appApi.rewardCenter(),
     ]);
-    await groMoreNative.initialize();
+    await adProvider.initialize();
     let exposureCpm = '';
-    await groMoreNative.loadReward(
+    await adProvider.loadReward(
       String(user.id),
       intent.mediaExtra,
-      'DRAMA_UNLOCK',
+      'CONTENT_UNLOCK',
       {
         onEcpm: value => {
           exposureCpm = value?.ecpm ?? '';
@@ -131,7 +132,7 @@ async function handleUnlockAdRequest(event: DramaPlaybackEvent) {
         },
       },
     );
-    const result = await groMoreNative.showReward();
+    const result = await adProvider.showReward();
     if (result.skipped && !result.completed && !result.rewardArrived) {
       await dramaNative.resolveUnlockAd(
         requestId,
@@ -141,7 +142,7 @@ async function handleUnlockAdRequest(event: DramaPlaybackEvent) {
       );
       return;
     }
-    const pendingKey = await rememberPendingAdReward(String(user.id), result.transactionId, startedAt, 'DRAMA_UNLOCK');
+    const pendingKey = await rememberPendingAdReward(String(user.id), result.transactionId, startedAt, 'CONTENT_UNLOCK');
     // 内容解锁允许采用 SDK 原生奖励到达回调兜底，避免 SSV 经临时隧道超时
     // 时让用户重复观看；金币仍只由服务端回调结算。
     let unlockResolved = false;
@@ -152,7 +153,7 @@ async function handleUnlockAdRequest(event: DramaPlaybackEvent) {
     for (let attempt = 0; attempt < 30; attempt += 1) {
       const status = result.transactionId
         ? await appApi.adRewardStatus(result.transactionId)
-        : await appApi.latestAdReward(startedAt, 'DRAMA_UNLOCK');
+        : await appApi.latestAdReward(startedAt, 'CONTENT_UNLOCK');
       if (__DEV__) console.info('[Drama unlock] settlement poll', {attempt: attempt + 1, status});
       if (status.status === 'SETTLED' || status.status === 'VERIFIED') {
         await forgetPendingAdReward(pendingKey);
@@ -165,7 +166,7 @@ async function handleUnlockAdRequest(event: DramaPlaybackEvent) {
           );
           unlockResolved = true;
         }
-        if (status.status === 'VERIFIED' || !center.dramaUnlockRewardEnabled) return;
+        if (status.status === 'VERIFIED' || !center.contentUnlockRewardEnabled) return;
         const profile = await appApi.me().catch(() => undefined);
         if (profile) useAuthStore.getState().setUser(profile);
         await dramaNative.showUnlockReward(status.awardedCoins, status.coinBalance).catch(() => undefined);
@@ -270,7 +271,7 @@ async function maybeShowFullScreenAd() {
 
   // 到达阈值后本轮即结束；加载失败不会在下一次点击时连续打扰用户。
   await AsyncStorage.setItem(PLAY_COUNT_KEY, '0');
-  const shown = await groMoreNative.showFullScreen();
+  const shown = await adProvider.showFullScreen();
   if (shown) await AsyncStorage.setItem(LAST_SHOWN_AT_KEY, String(Date.now()));
 }
 
@@ -285,9 +286,10 @@ export function openDramaWithAd(dramaId: string, episodeIndex = 0) {
   ])
     .then(() => {
       const runtime = getAdRuntimeConfig();
+      const contentRuntime = getShortDramaRuntimeConfig();
       const dramaConfig = runtime.enabled && runtime.reward.enabled
-        ? runtime.drama
-        : {...runtime.drama, unlockMode: 'COMMON' as const};
+        ? contentRuntime
+        : {...contentRuntime, unlockMode: 'COMMON' as const};
       return dramaNative.open(dramaId, episodeIndex, dramaConfig);
     })
     .finally(() => {

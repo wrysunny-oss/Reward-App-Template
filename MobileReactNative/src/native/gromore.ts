@@ -12,27 +12,9 @@ import {
 import {adConfig} from '../config/ad-config';
 import {getAdRuntimeConfig} from './ad-runtime';
 import {reportAdEcpm, reportAdEvent} from './ad-telemetry';
-
-export interface RewardResult {
-  completed: boolean;
-  /** 原生 SDK 已进入奖励到达回调；SSV 网络失败时 rewardVerify 仍可能为 false。 */
-  rewardArrived: boolean;
-  /** 用户或广告素材在奖励到达前触发了跳过事件。 */
-  skipped: boolean;
-  transactionId: string;
-  placementId: string;
-  rewardAmount: number;
-  rewardName: string;
-  rewardType?: number;
-  ecpm?: EcpmInfo | null;
-}
+import type {AdFormat, AdProvider, RewardLifecycle, RewardResult} from './ad-provider.types';
 
 type AdState = 'idle' | 'loading' | 'ready' | 'showing';
-type RewardLifecycle = {
-  onEcpm?: (value: EcpmInfo | null) => void;
-  /** 奖励信号通常早于广告关闭，用它提前等待服务端 SSV 结算。 */
-  onRewardSignal?: (value: RewardVerify) => void;
-};
 
 const APP_ID = adConfig.appId;
 const SHOW_TIMEOUT_MS = 10 * 60 * 1000;
@@ -51,7 +33,7 @@ let reward: RewardVerify | undefined;
 let rewardArrived = false;
 let rewardSkipped = false;
 let ecpm: EcpmInfo | null | undefined;
-let rewardFormat: 'REWARD' | 'DRAMA_UNLOCK' = 'REWARD';
+let rewardFormat: AdFormat = 'REWARD';
 let rewardLifecycle: RewardLifecycle | undefined;
 let startupSplashPromise: Promise<void> | undefined;
 let fullScreenPromise: Promise<boolean> | undefined;
@@ -65,7 +47,7 @@ function debugRewardCallback(name: string, payload?: unknown) {
   console.info(`[GroMore reward] ${name}`, payload);
 }
 
-function reportEcpm(format: 'SPLASH' | 'FEED' | 'FULL_SCREEN' | 'REWARD' | 'DRAMA_UNLOCK', placementId: string, value: EcpmInfo | null) {
+function reportEcpm(format: 'SPLASH' | 'FEED' | 'FULL_SCREEN' | AdFormat, placementId: string, value: EcpmInfo | null) {
   reportAdEcpm(format, placementId, value);
 }
 
@@ -108,12 +90,13 @@ function finishShow(error?: Error) {
 }
 
 /**
- * 富商剧场唯一广告入口。
+ * GroMore 广告适配器入口。
  *
  * SDK 只在用户同意隐私协议后初始化；激励结果只作为客户端展示依据，
  * 最终金币发放仍必须以穿山甲服务端回调和后端幂等记录为准。
  */
-export const groMoreNative = {
+export const groMoreNative: AdProvider = {
+  name: 'gromore',
   available: true,
   get state() {
     return state;
@@ -288,7 +271,7 @@ export const groMoreNative = {
   loadReward: async (
     userId: string,
     extra = '',
-    format: 'REWARD' | 'DRAMA_UNLOCK' = 'REWARD',
+    format: AdFormat = 'REWARD',
     lifecycle?: RewardLifecycle,
   ) => {
     const runtime = getAdRuntimeConfig();

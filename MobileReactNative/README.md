@@ -1,4 +1,4 @@
-# 富商剧场 React Native APP
+# 奖励应用模板 React Native APP
 
 ## 页面迁移状态
 
@@ -37,17 +37,17 @@ gradle :app:assembleDebug -PAPP_ENV=test -PAPP_API_ORIGIN=https://test-api.examp
 
 ```powershell
 cd android
-$env:HLY_APP_ENV = "production"
-$env:HLY_API_ORIGIN = "https://api.example.com"
+$env:REWARD_APP_ENV = "production"
+$env:REWARD_APP_API_ORIGIN = "https://api.example.com"
 # 默认读取仓库根目录 my-release-key.keystore；需要使用其他证书时才设置此项。
-# $env:HLY_RELEASE_STORE_FILE = "D:\path\other-release.keystore"
-$env:HLY_RELEASE_STORE_PASSWORD = "由本机安全配置提供"
-$env:HLY_RELEASE_KEY_ALIAS = "由证书信息提供"
-$env:HLY_RELEASE_KEY_PASSWORD = "由本机安全配置提供"
+# $env:REWARD_APP_RELEASE_STORE_FILE = "D:\path\other-release.keystore"
+$env:REWARD_APP_RELEASE_STORE_PASSWORD = "由本机安全配置提供"
+$env:REWARD_APP_RELEASE_KEY_ALIAS = "由证书信息提供"
+$env:REWARD_APP_RELEASE_KEY_PASSWORD = "由本机安全配置提供"
 .\gradlew.bat :app:assembleRelease
 ```
 
-也可以使用环境变量 `HLY_APP_ENV` 和 `HLY_API_ORIGIN`。API 地址不要包含 `/api/v1`，客户端会自动追加。版本展示和请求头统一读取 Android `versionName`、`versionCode`。
+也可以使用环境变量 `REWARD_APP_ENV` 和 `REWARD_APP_API_ORIGIN`。API 地址不要包含 `/api/v1`，客户端会自动追加。版本展示和请求头统一读取 Android `versionName`、`versionCode`。
 
 修改版本号、生成 APK/AAB、上传安装包并在管理后台配置更新策略时，按照 [APP 版本发布指南](../docs/APP版本发布指南.md) 操作。
 

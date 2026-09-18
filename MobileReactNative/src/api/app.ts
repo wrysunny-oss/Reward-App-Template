@@ -27,6 +27,7 @@ import type {
   AdClientEvent,
   VerifiedAdImpression,
   AdRuntimeConfig,
+  ShortDramaRuntimeConfig,
   GoldenWatchProgressResult,
   InviteRelations,
   SdkLibrarySyncInput,
@@ -88,6 +89,7 @@ export const appApi = {
     slots: result.slots.map(slot => ({...slot, imageUrl: resolveAssetUrl(slot.imageUrl)})),
   })),
   adConfig: () => apiRequest<AdRuntimeConfig>('/operations/ad-config'),
+  shortDramaConfig: () => apiRequest<ShortDramaRuntimeConfig>('/content/runtime-config'),
   adEvent: (data: AdClientEvent) => apiRequest<{accepted: boolean}>('/operations/ad-events', {method: 'POST', data}),
   verifiedAdImpression: (data: VerifiedAdImpression) =>
     apiRequest<{awardedCoins: string; format: string}>('/rewards/ad-rewards/verified-impression', {method: 'POST', data}),
@@ -102,7 +104,7 @@ export const appApi = {
     apiRequest<AdRewardStatus>(`/rewards/ad-rewards/${encodeURIComponent(transactionId)}/status`),
   dramaUnlockAdIntent: (data: {dramaId: string; episodeIndex: number}) =>
     apiRequest<{mediaExtra: string}>('/rewards/ad-rewards/drama-unlock-intent', {method: 'POST', data}),
-  latestAdReward: (after: number, format: 'REWARD' | 'DRAMA_UNLOCK' = 'REWARD') =>
+  latestAdReward: (after: number, format: 'REWARD' | 'CONTENT_UNLOCK' = 'REWARD') =>
     apiRequest<AdRewardStatus>(`/rewards/ad-rewards/latest?after=${encodeURIComponent(new Date(after).toISOString())}&format=${format}`),
   goldenWatchProgress: (data: {externalId: string; episodeIndex: number; sessionId: string; elapsedSeconds: number}) =>
     apiRequest<GoldenWatchProgressResult>('/rewards/golden-watch/progress', {method: 'POST', data}),

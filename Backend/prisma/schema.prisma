@@ -78,7 +78,7 @@ enum OperationPlacement {
 
 enum OperationTargetType {
   NONE
-  DRAMA
+  CONTENT
   INTERNAL
   EXTERNAL
 }

@@ -13,8 +13,7 @@ import { openApiDocument } from "./docs/openapi.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import { uploadRoot } from "./services/local-image-storage.js";
 import authRoutes from "./modules/auth/auth.routes.js";
-import contentRoutes from "./modules/content/content.routes.js";
-import libraryRoutes from "./modules/library/library.routes.js";
+import {getContentRoutes} from "./modules/content/content-registry.js";
 import rewardRoutes from "./modules/reward/reward.routes.js";
 import withdrawalRoutes from "./modules/withdrawal/withdrawal.routes.js";
 import operationRoutes from "./modules/operation/operation.routes.js";
@@ -24,7 +23,7 @@ import notificationRoutes from "./modules/notification/notification.routes.js";
 import * as operationService from "./modules/operation/operation.service.js";
 import { renderDownloadPage } from "./modules/operation/invite-page.js";
 import { requireProductModules } from "./middleware/product-module.js";
-import { productModules } from "./generated/product.generated.js";
+import { contentType, productModules } from "./generated/product.generated.js";
 
 export const app = express();
 // 反向代理后的真实 IP 会用于限流、访问日志和后台审计。
@@ -83,8 +82,7 @@ app.get("/invite", async (req, res) => {
   return res.type("html").send(renderDownloadPage({ brandName: env.APP_BRAND_NAME, inviteCode, release }));
 });
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/content", requireProductModules("shortDrama"), contentRoutes);
-app.use("/api/v1/library", requireProductModules("shortDrama"), libraryRoutes);
+for (const contentRoute of getContentRoutes(contentType)) app.use(contentRoute.path, contentRoute.router);
 app.use("/api/v1/rewards", rewardRoutes);
 app.use("/api/v1/withdrawals", requireProductModules("withdrawals"), withdrawalRoutes);
 app.use("/api/v1/operations", operationRoutes);

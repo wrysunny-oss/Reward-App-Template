@@ -18,19 +18,6 @@ const defaults: AdRuntimeConfig = {
     showTimeoutMs: adConfig.fullScreen.showTimeoutMs,
   },
   reward: {enabled: true, ...adConfig.reward},
-  drama: {
-    unlockMode: 'SPECIFIC',
-    freeEpisodes: 10,
-    unlockEpisodes: 10,
-    continuousUnlock: false,
-    hideRewardDialog: false,
-    hideCellularToast: false,
-    hideLikeButton: false,
-    hideFavorButton: false,
-    hideDoubleClick: false,
-    hideLongClickSpeed: false,
-    infiniteScrollEnabled: true,
-  },
 };
 
 let current: AdRuntimeConfig = defaults;
@@ -41,7 +28,7 @@ export function getAdRuntimeConfig() {
 
 function apply(value: AdRuntimeConfig | undefined) {
   if (!value?.splash?.placementId || !value.feed?.placementId || !value.fullScreen?.placementId || !value.reward?.placementId) return;
-  current = {...value, drama: value.drama ?? defaults.drama};
+  current = value;
 }
 
 /** 使用缓存立即启动，远端配置最多等待 2 秒，接口异常时保持安全默认值。 */

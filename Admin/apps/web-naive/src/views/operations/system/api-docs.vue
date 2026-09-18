@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { Page } from '@vben/common-ui';
+
 import { NButton, NCard } from 'naive-ui';
 
 defineOptions({ name: 'ApiDocumentation' });
@@ -14,7 +15,7 @@ function openStandalone() {
   <Page title="接口文档" description="由后端 OpenAPI 定义生成，可查看参数、权限、响应并在线调试">
     <NCard content-style="padding: 0; overflow: hidden;">
       <template #header-extra><NButton secondary @click="openStandalone">新窗口打开</NButton></template>
-      <iframe class="h-[calc(100vh-190px)] min-h-[680px] w-full border-0" src="/docs/" title="幻悦短剧 API 文档" />
+      <iframe class="h-[calc(100vh-190px)] min-h-[680px] w-full border-0" src="/docs/" title="产品 API 文档"></iframe>
     </NCard>
   </Page>
 </template>

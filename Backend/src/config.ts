@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import { z } from "zod";
+import { productConfig } from "./generated/product.generated.js";
 
 // 后端经常由工作区根目录、Backend 目录或编译后的 dist 目录启动。
 // dotenv 默认只按 process.cwd() 查找，会导致同一套代码因启动目录不同而漏读 Backend/.env。
@@ -31,7 +32,7 @@ const schema = z.object({
     .default("development"),
   API_DOCS_ENABLED: z.enum(["true", "false"]).optional(),
   PORT: z.coerce.number().int().positive().default(3000),
-  APP_BRAND_NAME: z.string().trim().min(1).default("富商剧场"),
+  APP_BRAND_NAME: z.string().trim().min(1).default(productConfig.brand.appDisplayName),
   DATABASE_URL: z.string().min(1),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
@@ -49,8 +50,11 @@ const schema = z.object({
   PANGLE_REWARD_SECURITY_KEY: z.string().min(16).optional(),
   /** eCPM 加密防护的 RSA 私钥，仅用于服务端解密客户端回传的 rs_info。 */
   PANGLE_RSS_PRIVATE_KEY: z.string().min(32).optional(),
-  PANGLE_GROMORE_APP_ID: z.string().default("5879132"),
-  PANGLE_GROMORE_REWARDED_PLACEMENT_ID: z.string().default("104489019"),
+  PANGLE_GROMORE_APP_ID: z.string().default(productConfig.advertising.providers.gromore?.appId ?? "000000"),
+  PANGLE_GROMORE_REWARDED_PLACEMENT_ID: z.string().default(productConfig.advertising.providers.gromore?.rewardPlacementId ?? "000000"),
+  /** Taku 服务端回调凭据；只有选择 Taku provider 时由适配器读取。 */
+  TAKU_APP_KEY: optionalString(16),
+  TAKU_CALLBACK_SECRET: optionalString(16),
   /** 内容输出服务端接口密钥，严禁下发到 APP 或写入接口响应。 */
   PANGLE_CONTENT_SERVER_KEY: z.string().min(16).optional(),
   /** 支付宝商家转账配置；支持证书模式（推荐）或支付宝公钥模式。 */

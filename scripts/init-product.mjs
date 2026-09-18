@@ -20,19 +20,21 @@ const fieldDefinitions = [
   ['admin-title', 'brand.adminTitle', '管理后台名称'],
   ['admin-description', 'brand.adminDescription', '管理后台说明'],
   ['company-name', 'brand.companyName', '运营公司名称'],
-  ['sdk-app-name', 'brand.sdkAppName', '穿山甲 SDK 应用名'],
   ['application-id', 'android.applicationId', 'Android applicationId'],
   ['admin-namespace', 'admin.namespace', 'Admin 缓存命名空间'],
   ['api-origin', 'domains.productionApiOrigin', '线上 API 根地址'],
-  ['gromore-app-id', 'advertising.gromore.appId', 'GroMore 应用 ID'],
-  ['splash-placement-id', 'advertising.gromore.splashPlacementId', '开屏广告位 ID'],
-  ['feed-placement-id', 'advertising.gromore.feedPlacementId', '信息流广告位 ID'],
-  ['fullscreen-placement-id', 'advertising.gromore.fullScreenPlacementId', '全屏广告位 ID'],
-  ['reward-placement-id', 'advertising.gromore.rewardPlacementId', '激励视频广告位 ID'],
+  ['content-type', 'content.type', '内容类型（none/shortDrama/quiz/novel/music）'],
+  ['short-drama-sdk-id', 'content.providers.shortDrama.sdkSettingId', '短剧内容 SDK Setting ID'],
+  ['ad-provider', 'advertising.provider', '广告平台（none/gromore/taku）'],
+  ['ad-app-name', 'advertising.selected.registeredAppName', '当前广告平台注册应用名'],
+  ['ad-app-id', 'advertising.selected.appId', '当前广告平台应用 ID'],
+  ['splash-placement-id', 'advertising.selected.splashPlacementId', '开屏广告位 ID'],
+  ['feed-placement-id', 'advertising.selected.feedPlacementId', '信息流广告位 ID'],
+  ['fullscreen-placement-id', 'advertising.selected.fullScreenPlacementId', '全屏广告位 ID'],
+  ['reward-placement-id', 'advertising.selected.rewardPlacementId', '激励视频广告位 ID'],
 ];
 
 const moduleLabels = {
-  shortDrama: '短剧内容',
   advertising: '广告',
   rewards: '金币与奖励',
   invitations: '邀请好友',
@@ -90,10 +92,24 @@ function parseArguments(argv) {
 }
 
 function getValue(object, dottedPath) {
+  if (dottedPath.startsWith('advertising.selected.')) {
+    const key = dottedPath.slice('advertising.selected.'.length);
+    return object.advertising?.providers?.[object.advertising?.provider]?.[key];
+  }
   return dottedPath.split('.').reduce((value, key) => value?.[key], object);
 }
 
 function setValue(object, dottedPath, value) {
+  if (dottedPath.startsWith('advertising.selected.')) {
+    const key = dottedPath.slice('advertising.selected.'.length);
+    object.advertising ??= {};
+    object.advertising.providers ??= {};
+    const provider = object.advertising.provider;
+    if (!provider || provider === 'none') throw new Error('设置广告位前必须先选择 gromore 或 taku');
+    object.advertising.providers[provider] ??= {};
+    object.advertising.providers[provider][key] = value;
+    return;
+  }
   const keys = dottedPath.split('.');
   const last = keys.pop();
   const target = keys.reduce((current, key) => (current[key] ??= {}), object);
@@ -105,7 +121,10 @@ function changedFields(before, after) {
     ...fieldDefinitions.map(([, dottedPath]) => dottedPath),
     ...productModuleKeys.map((key) => `modules.${key}`),
   ];
-  return paths.filter((dottedPath) => getValue(before, dottedPath) !== getValue(after, dottedPath));
+  return paths.filter((dottedPath) => {
+    if (dottedPath.startsWith('advertising.selected.') && before.advertising?.provider !== after.advertising?.provider) return false;
+    return getValue(before, dottedPath) !== getValue(after, dottedPath);
+  });
 }
 
 function printSummary(before, after) {
@@ -142,11 +161,12 @@ async function collectInteractively(candidate) {
   try {
     console.log('按 Enter 保留当前值。配置中不会写入密码、AccessKey 或私钥。\n');
     for (const [, dottedPath, label] of fieldDefinitions) {
+      if (dottedPath.startsWith('advertising.selected.') && candidate.advertising?.provider === 'none') continue;
       setValue(candidate, dottedPath, await promptText(readline, label, getValue(candidate, dottedPath)));
     }
 
-    candidate.modules.shortDrama = await promptBoolean(readline, '启用短剧内容', candidate.modules.shortDrama);
     candidate.modules.advertising = await promptBoolean(readline, '启用广告', candidate.modules.advertising);
+    if (!candidate.modules.advertising) candidate.advertising.provider = 'none';
     candidate.modules.rewards = await promptBoolean(readline, '启用金币与奖励', candidate.modules.rewards);
     if (candidate.modules.rewards) {
       candidate.modules.invitations = await promptBoolean(readline, '启用邀请好友', candidate.modules.invitations);

@@ -6,7 +6,8 @@ import { sanitizeDocumentContent } from "./rich-text.js";
 import type { StoredImage } from "../../services/local-image-storage.js";
 import { adRuntimeConfigSchema } from "./operation.schema.js";
 import { AD_RUNTIME_CONFIG_KEY } from "./ad-runtime.service.js";
-import { productModules } from "../../generated/product.generated.js";
+import { advertisingProvider, contentType, productModules } from "../../generated/product.generated.js";
+import { SHORT_DRAMA_RUNTIME_CONFIG_KEY, shortDramaRuntimeConfigSchema } from "../content/short-drama-runtime.service.js";
 
 type AuditRequest = Pick<Request, "method" | "path" | "ip" | "header">;
 function audit(operatorId: bigint, action: string, targetType: string, targetId: string, request: AuditRequest, detail?: Prisma.InputJsonValue) {
@@ -22,7 +23,13 @@ export async function getBootstrap() {
     prisma.announcement.findMany({ where: { status: "PUBLISHED", ...activeTime }, orderBy: { id: "desc" } }),
     prisma.systemConfig.findMany(),
   ]);
-  return { slots, announcements, configs: Object.fromEntries(configs.map((item) => [item.key, item.value])), modules: productModules };
+  return {
+    slots,
+    announcements,
+    configs: Object.fromEntries(configs.map((item) => [item.key, item.value])),
+    modules: productModules,
+    capabilities: {contentType, advertisingProvider},
+  };
 }
 
 export async function getPublishedDocument(code: string) {
@@ -70,7 +77,11 @@ export async function deleteAnnouncement(operatorId: bigint, id: bigint, request
 
 export const listConfigs = () => prisma.systemConfig.findMany({ orderBy: { key: "asc" } });
 export async function updateConfig(operatorId: bigint, key: string, data: { value: Prisma.InputJsonValue; description?: string | null }, request: AuditRequest) {
-  const value = key === AD_RUNTIME_CONFIG_KEY ? adRuntimeConfigSchema.parse(data.value) as Prisma.InputJsonValue : data.value;
+  const value = key === AD_RUNTIME_CONFIG_KEY
+    ? adRuntimeConfigSchema.parse(data.value) as Prisma.InputJsonValue
+    : key === SHORT_DRAMA_RUNTIME_CONFIG_KEY
+      ? shortDramaRuntimeConfigSchema.parse(data.value) as Prisma.InputJsonValue
+      : data.value;
   const normalized = { ...data, value };
   const item = await prisma.systemConfig.upsert({ where: { key }, create: { key, ...normalized }, update: normalized });
   await audit(operatorId, "operation.config.update", "system_config", key, request, { value });

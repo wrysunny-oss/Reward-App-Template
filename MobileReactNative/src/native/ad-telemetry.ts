@@ -30,7 +30,7 @@ export function reportAdEcpm(
     adnName: value.adnName,
   });
   if (
-    format === 'REWARD' || format === 'DRAMA_UNLOCK' || !ecpm || !value.slotID ||
+    format === 'REWARD' || format === 'CONTENT_UNLOCK' || !ecpm || !value.slotID ||
     !value.requestID || typeof value.rsInfo !== 'string' || !value.rsInfo
   ) return;
   appApi.verifiedAdImpression({

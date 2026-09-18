@@ -4,7 +4,10 @@ import {
   Platform,
   type EmitterSubscription,
 } from 'react-native';
-import type {AdRuntimeConfig} from '../types/api';
+import type {ShortDramaRuntimeConfig} from '../types/api';
+import productConfig from '../../product.generated.json';
+
+const shortDramaSdkSettingId = productConfig.content.providers.shortDrama?.sdkSettingId ?? '';
 
 export type DramaPlaybackEvent = {
   eventType: 'PLAYBACK_STARTED' | 'PLAYER_CLOSED' | 'REQUEST_SUCCEEDED' | 'WATCH_PROGRESS' | 'UNLOCK_AD_REQUEST';
@@ -29,7 +32,7 @@ export type DramaLibrarySnapshot = {
 interface DramaContentNativeModule {
   initialize(configName: string, debug: boolean): Promise<void>;
   isReady(): Promise<boolean>;
-  openDramaDetail(dramaId: string, episodeIndex: number, config: AdRuntimeConfig['drama']): Promise<void>;
+  openDramaDetail(dramaId: string, episodeIndex: number, config: ShortDramaRuntimeConfig): Promise<void>;
   notifyUnlockAdShown(requestId: string, cpm: string): Promise<void>;
   resolveUnlockAd(requestId: string, success: boolean, transactionId: string, cpm: string): Promise<void>;
   showUnlockReward(awardedCoins: string, coinBalance: string): Promise<void>;
@@ -48,7 +51,7 @@ let initializing: Promise<void> | undefined;
 /** Pangrowth 唯一 TS 入口；业务页面不直接依赖 NativeModules。 */
 export const dramaNative = {
   available: Platform.OS === 'android' && Boolean(nativeModule),
-  initialize: (configName = 'SDK_Setting_5879132.json', debug = __DEV__) => {
+  initialize: (configName = `SDK_Setting_${shortDramaSdkSettingId}.json`, debug = __DEV__) => {
     if (!nativeModule) return Promise.reject(new Error('短剧原生模块尚未安装'));
     if (!initializing) {
       initializing = nativeModule.initialize(configName, debug).catch(error => {
@@ -58,7 +61,7 @@ export const dramaNative = {
     }
     return initializing;
   },
-  open: async (dramaId: string, episodeIndex = 0, config: AdRuntimeConfig['drama']) => {
+  open: async (dramaId: string, episodeIndex = 0, config: ShortDramaRuntimeConfig) => {
     if (!nativeModule) throw new Error('短剧原生模块尚未安装');
     if (!(await nativeModule.isReady())) await dramaNative.initialize();
     return nativeModule.openDramaDetail(dramaId, episodeIndex, config);

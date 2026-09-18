@@ -16,7 +16,7 @@ export interface UpdateAdRewardConfig {
   feedRewardEnabled: boolean;
   fullScreenRewardEnabled: boolean;
   rewardedVideoRewardEnabled: boolean;
-  dramaUnlockRewardEnabled: boolean;
+  contentUnlockRewardEnabled: boolean;
   rewardedAdMilestones: RewardMilestoneDefinition[];
   inviteMilestones: RewardMilestoneDefinition[];
 }

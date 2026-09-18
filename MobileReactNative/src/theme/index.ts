@@ -9,7 +9,7 @@ import {
 import {createTamagui} from '@tamagui/core';
 import {animations} from './motion';
 
-/** 富商剧场全局语义色。页面只能引用语义，不直接散落色值。 */
+/** 模板迁移基线的全局语义色。页面只能引用语义，不直接散落色值。 */
 export const colors = {
   background: '#080B12',
   surface: '#111620',
@@ -69,7 +69,7 @@ export const tamaguiConfig = createTamagui({
   tokens,
   themes: {
     ...themes,
-    huanyue: {
+    rewardApp: {
       ...themes.dark,
       background: colors.background,
       backgroundHover: colors.surface,

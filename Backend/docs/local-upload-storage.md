@@ -11,7 +11,7 @@ UPLOAD_DIRECTORY=D:/hanle-data/uploads
 UPLOAD_MAX_IMAGE_MB=5
 ```
 
-Linux 可使用 `/var/lib/hanle-theater/uploads`。运行后端的系统账户必须拥有该目录的读取、创建和删除权限。
+Linux 可使用 `/var/lib/reward-app/uploads`。运行后端的系统账户必须拥有该目录的读取、创建和删除权限。
 
 目录结构如下：
 
@@ -30,13 +30,13 @@ uploads/
 Windows 可在后端停止写入后执行：
 
 ```powershell
-robocopy D:\hanle-data\uploads E:\backup\hanle-uploads /MIR
+robocopy D:\hanle-data\uploads E:\backup\reward-app-uploads /MIR
 ```
 
 Linux 可执行：
 
 ```bash
-rsync -a --delete /var/lib/hanle-theater/uploads/ /backup/hanle-uploads/
+rsync -a --delete /var/lib/reward-app/uploads/ /backup/reward-app-uploads/
 ```
 
 恢复时先恢复数据库，再将图片目录恢复到 `UPLOAD_DIRECTORY` 指向的位置，最后启动后端并抽查头像、首页运营位和富文本图片。

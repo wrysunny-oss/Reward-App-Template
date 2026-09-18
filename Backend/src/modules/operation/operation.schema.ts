@@ -7,7 +7,7 @@ export const configKeySchema = z.object({ key: z.string().trim().min(2).max(100)
 export const slotSchema = z.object({
   placement: z.enum(["HOME_BANNER", "HOME_RECOMMEND", "STARTUP_POPUP"]),
   title: z.string().trim().min(1).max(100), imageUrl: z.string().trim().min(1).max(1000),
-  targetType: z.enum(["NONE", "DRAMA", "INTERNAL", "EXTERNAL"]), targetValue: z.string().trim().max(1000).nullish(),
+  targetType: z.enum(["NONE", "CONTENT", "INTERNAL", "EXTERNAL"]), targetValue: z.string().trim().max(1000).nullish(),
   sort: z.number().int().min(-99999).max(99999), enabled: z.boolean(), startAt: optionalDate, endAt: optionalDate,
 }).refine((data) => !data.startAt || !data.endAt || data.endAt > data.startAt, { message: "结束时间必须晚于开始时间", path: ["endAt"] });
 export const announcementSchema = z.object({
@@ -35,24 +35,11 @@ export const adRuntimeConfigSchema = z.object({
     showTimeoutMs: z.number().int().min(30_000).max(10 * 60_000),
   }),
   reward: z.object({ enabled: z.boolean(), placementId }),
-  drama: z.object({
-    unlockMode: z.enum(["COMMON", "SPECIFIC"]),
-    freeEpisodes: z.number().int().min(0).max(1000),
-    unlockEpisodes: z.number().int().min(1).max(10),
-    continuousUnlock: z.boolean(),
-    hideRewardDialog: z.boolean(),
-    hideCellularToast: z.boolean(),
-    hideLikeButton: z.boolean(),
-    hideFavorButton: z.boolean(),
-    hideDoubleClick: z.boolean(),
-    hideLongClickSpeed: z.boolean(),
-    infiniteScrollEnabled: z.boolean(),
-  }),
 });
 export type AdRuntimeConfig = z.infer<typeof adRuntimeConfigSchema>;
 
 export const adClientEventSchema = z.object({
-  format: z.enum(["SPLASH", "FEED", "FULL_SCREEN", "REWARD", "DRAMA_UNLOCK"]),
+  format: z.enum(["SPLASH", "FEED", "FULL_SCREEN", "REWARD", "CONTENT_UNLOCK"]),
   eventType: z.enum(["REQUEST", "LOADED", "SHOW", "CLICK", "CLOSE", "FAIL", "DISLIKE", "ECPM", "REWARD_ARRIVED"]),
   placementId,
   requestId: z.string().trim().max(100).nullish(),
@@ -64,7 +51,7 @@ export const adClientEventSchema = z.object({
 export const adEventListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
-  format: z.enum(["SPLASH", "FEED", "FULL_SCREEN", "REWARD", "DRAMA_UNLOCK"]).optional(),
+  format: z.enum(["SPLASH", "FEED", "FULL_SCREEN", "REWARD", "CONTENT_UNLOCK"]).optional(),
   eventType: z.enum(["REQUEST", "LOADED", "SHOW", "CLICK", "CLOSE", "FAIL", "DISLIKE", "ECPM", "REWARD_ARRIVED"]).optional(),
 });
 export const documentSchema = z.object({

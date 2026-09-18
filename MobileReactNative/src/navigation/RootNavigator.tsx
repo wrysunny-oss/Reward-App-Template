@@ -5,10 +5,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {View as TamaguiView} from '@tamagui/core';
 import {AppIcon} from '../components/AppIcon';
 import {BrandLoader} from '../components/BrandLoader';
-import {EmptyState} from '../components/DesignSystem';
-import {Screen} from '../components/Screen';
 import {AuthScreen} from '../features/auth/AuthScreen';
-import {HomeScreen} from '../features/home/HomeScreen';
 import {TasksScreen} from '../features/tasks/TasksScreen';
 import {EarningsScreen} from '../features/earnings/EarningsScreen';
 import {ProfileScreen} from '../features/profile/ProfileScreen';
@@ -24,7 +21,8 @@ import {NotificationsScreen} from '../features/misc/NotificationsScreen';
 import {SearchScreen} from '../features/misc/SearchScreen';
 import {AboutScreen, SettingsScreen} from '../features/misc/SettingsScreen';
 import {brandConfig} from '../config/brand';
-import {productModules} from '../config/modules';
+import {isShortDramaEnabled, productModules} from '../config/modules';
+import {ContentHomeScreen} from '../content/content-registry';
 import {useAuthStore} from '../stores/auth';
 import {colors} from '../theme';
 import {
@@ -71,7 +69,7 @@ function MainTabs() {
       tabBarIcon: tabIconRenderers[route.name],
       tabBarLabelStyle: {fontSize: 11, fontWeight: '600', marginTop: 1},
     })}>
-      <Tab.Screen name="首页" component={productModules.shortDrama ? HomeScreen : ModuleUnavailableScreen} />
+      <Tab.Screen name="首页" component={ContentHomeScreen} />
       {productModules.rewards ? <Tab.Screen name="福利" component={TasksScreen} /> : null}
       {productModules.rewards ? <Tab.Screen name="收益" component={EarningsScreen} /> : null}
       <Tab.Screen name="我的" component={ProfileScreen} />
@@ -85,7 +83,7 @@ const screens: Array<[string, React.ComponentType<any>, string]> = [
   ...(productModules.invitations ? [['InviteRelations', InviteRelationsScreen, '我的邀请关系'] as [string, React.ComponentType<any>, string]] : []),
   ['ProfileEdit', ProfileEditScreen, '个人资料'],
   ['Security', SecurityScreen, '账户安全'],
-  ...(productModules.shortDrama ? [
+  ...(isShortDramaEnabled ? [
     ['History', LibraryScreen, '观看历史'] as [string, React.ComponentType<any>, string],
     ['Favorites', LibraryScreen, '我的收藏'] as [string, React.ComponentType<any>, string],
   ] : []),
@@ -93,17 +91,9 @@ const screens: Array<[string, React.ComponentType<any>, string]> = [
   ['Help', HelpScreen, '帮助与反馈'],
   ['Agreement', AgreementScreen, '协议与政策'],
   ['Notifications', NotificationsScreen, '通知中心'],
-  ...(productModules.shortDrama ? [['Search', SearchScreen, '搜索'] as [string, React.ComponentType<any>, string]] : []),
+  ...(isShortDramaEnabled ? [['Search', SearchScreen, '搜索'] as [string, React.ComponentType<any>, string]] : []),
   ['About', AboutScreen, brandConfig.aboutTitle],
 ];
-
-function ModuleUnavailableScreen() {
-  return (
-    <Screen style={styles.unavailableScreen}>
-      <EmptyState title="内容模块未启用" description="当前产品未启用短剧内容，请从“我的”继续使用账户功能。" icon="film" />
-    </Screen>
-  );
-}
 
 export function RootNavigator() {
   const {ready, user} = useAuthStore();
@@ -118,7 +108,6 @@ export function RootNavigator() {
 }
 
 const styles = StyleSheet.create({
-  unavailableScreen: {justifyContent: 'center'},
   tabIcon: {width: 40, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center'},
   tabIconActive: {backgroundColor: colors.primarySoft},
 });

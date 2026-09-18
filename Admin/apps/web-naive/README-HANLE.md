@@ -1,4 +1,4 @@
-# 富商剧场管理后台
+# 奖励应用模板管理后台
 
 本应用基于 Vue Vben Admin 的 Naive UI 版本，业务代码集中在 `src/views/operations`，接口集中在 `src/api/admin.ts`。
 

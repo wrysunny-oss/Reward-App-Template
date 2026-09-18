@@ -1,6 +1,6 @@
 # APP 版本发布指南
 
-本文说明富商剧场 Android APP 的版本号修改、正式打包、安装包上传和后台更新策略配置。
+本文说明奖励应用模板 Android APP 的版本号修改、正式打包、安装包上传和后台更新策略配置。
 
 ## 1. 版本字段
 
@@ -53,19 +53,19 @@ npm.cmd run product:doctor -- --production
 PowerShell 示例：
 
 ```powershell
-cd D:\Project\HanLe-Theater-vscode\MobileReactNative\android
+cd D:\Project\Reward-App-Template\MobileReactNative\android
 
-$env:HLY_APP_ENV = "production"
-$env:HLY_API_ORIGIN = "https://api.nantongjiangnan.cn"
-$env:HLY_RELEASE_STORE_PASSWORD = "证书库密码"
-$env:HLY_RELEASE_KEY_ALIAS = "证书别名"
-$env:HLY_RELEASE_KEY_PASSWORD = "密钥密码"
+$env:REWARD_APP_ENV = "production"
+$env:REWARD_APP_API_ORIGIN = "https://api.example.com"
+$env:REWARD_APP_RELEASE_STORE_PASSWORD = "证书库密码"
+$env:REWARD_APP_RELEASE_KEY_ALIAS = "证书别名"
+$env:REWARD_APP_RELEASE_KEY_PASSWORD = "密钥密码"
 ```
 
 默认签名文件为仓库根目录的 `my-release-key.keystore`。需要使用其他文件时设置：
 
 ```powershell
-$env:HLY_RELEASE_STORE_FILE = "D:\安全目录\release.keystore"
+$env:REWARD_APP_RELEASE_STORE_FILE = "D:\安全目录\release.keystore"
 ```
 
 密码不要写入 `build.gradle`、`.env` 示例或 Git 仓库。
@@ -119,7 +119,7 @@ apkanalyzer manifest version-code app-release.apk
 将 APK 上传到可公开访问的 HTTPS 地址，并在浏览器中确认可以直接下载。建议文件名带版本号，避免 CDN 或浏览器缓存旧文件，例如：
 
 ```text
-fushang-theater-1.0.1.apk
+reward-app-1.0.1.apk
 ```
 
 不要用同一个文件名直接覆盖旧包。发布前保留上一版 APK，便于回滚下载入口。

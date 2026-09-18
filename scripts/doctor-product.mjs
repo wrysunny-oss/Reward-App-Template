@@ -149,7 +149,7 @@ function checkGeneratedProduct(product) {
     ? pass('generated.app-name', 'APP 原生显示名称已同步')
     : fail('generated.app-name', 'APP 原生显示名称未同步', '运行 npm run product:sync');
 
-  const adminProduction = parseEnvFile(path.join(root, 'Admin', 'apps', 'web-naive', '.env.production'));
+  const adminProduction = parseEnvFile(path.join(root, 'Admin', 'apps', 'web-naive', '.env.production.example'));
   const expectedApi = `${product.domains.productionApiOrigin}/api/v1`;
   adminProduction.VITE_GLOB_API_URL === expectedApi
     ? pass('generated.admin-api', 'Admin 生产 API 地址正确')
@@ -191,26 +191,32 @@ function checkRuntimeEnv(env, product, deployEnv) {
     fail('env.cors', '生产 CORS_ORIGINS 只能包含明确的 HTTPS 管理端域名');
   } else pass('env.cors', `CORS 白名单包含 ${cors.length} 个来源`);
 
-  if (product.modules.advertising) {
+  if (product.modules.advertising && product.advertising.provider === 'gromore') {
+    const gromore = product.advertising.providers.gromore;
     checkSecret(env, 'PANGLE_CALLBACK_SECRET', 32, options.production);
     checkSecret(env, 'PANGLE_REWARD_SECURITY_KEY', 16);
     checkSecret(env, 'PANGLE_RSS_PRIVATE_KEY', 32, false);
     if (!env.PANGLE_GROMORE_APP_ID) {
       const report = options.production ? fail : warn;
       report('env.pangle-app', 'PANGLE_GROMORE_APP_ID 未显式配置', '生产环境应与 product.config.json 保持一致');
-    } else if (env.PANGLE_GROMORE_APP_ID === product.advertising.gromore.appId) {
+    } else if (env.PANGLE_GROMORE_APP_ID === gromore.appId) {
       pass('env.pangle-app', '服务端 GroMore 应用 ID 与产品配置一致');
     } else fail('env.pangle-app', 'PANGLE_GROMORE_APP_ID 与 product.config.json 不一致');
     if (!env.PANGLE_GROMORE_REWARDED_PLACEMENT_ID) {
       const report = options.production ? fail : warn;
       report('env.pangle-reward', 'PANGLE_GROMORE_REWARDED_PLACEMENT_ID 未显式配置', '生产环境应与 product.config.json 保持一致');
-    } else if (env.PANGLE_GROMORE_REWARDED_PLACEMENT_ID === product.advertising.gromore.rewardPlacementId) {
+    } else if (env.PANGLE_GROMORE_REWARDED_PLACEMENT_ID === gromore.rewardPlacementId) {
       pass('env.pangle-reward', '服务端激励广告位 ID 与产品配置一致');
     } else fail('env.pangle-reward', 'PANGLE_GROMORE_REWARDED_PLACEMENT_ID 与 product.config.json 不一致');
     if (!env.PANGLE_CALLBACK_IPS?.trim()) warn('env.pangle-ips', 'PANGLE_CALLBACK_IPS 为空，回调只依赖签名校验', '确认这是有意配置');
   }
 
-  if (product.modules.shortDrama) checkSecret(env, 'PANGLE_CONTENT_SERVER_KEY', 16, false);
+  if (product.modules.advertising && product.advertising.provider === 'taku') {
+    checkSecret(env, 'TAKU_APP_KEY', 16);
+    checkSecret(env, 'TAKU_CALLBACK_SECRET', 16);
+  }
+
+  if (product.content.type === 'shortDrama') checkSecret(env, 'PANGLE_CONTENT_SERVER_KEY', 16, false);
 
   if (product.modules.smsRegistration) {
     checkSecret(env, 'ALIBABA_CLOUD_ACCESS_KEY_ID', 8);
@@ -275,17 +281,21 @@ function checkAndroid(product) {
   if (options.production && versionCode <= 1) warn('android.version-initial', 'versionCode 仍为 1，发布迭代前需要递增');
 
   const defaultKeystore = path.join(root, 'my-release-key.keystore');
-  const configuredKeystore = process.env.HLY_RELEASE_STORE_FILE
-    ? path.resolve(root, process.env.HLY_RELEASE_STORE_FILE)
+  const configuredKeystore = process.env.REWARD_APP_RELEASE_STORE_FILE
+    ? path.resolve(root, process.env.REWARD_APP_RELEASE_STORE_FILE)
     : defaultKeystore;
   fs.existsSync(configuredKeystore)
     ? pass('android.keystore', `签名证书存在：${path.relative(root, configuredKeystore)}`)
     : fail('android.keystore', '未找到 Release 签名证书');
-  const signingVariables = ['HLY_RELEASE_STORE_PASSWORD', 'HLY_RELEASE_KEY_ALIAS', 'HLY_RELEASE_KEY_PASSWORD'];
+  const signingVariables = [
+    'REWARD_APP_RELEASE_STORE_PASSWORD',
+    'REWARD_APP_RELEASE_KEY_ALIAS',
+    'REWARD_APP_RELEASE_KEY_PASSWORD',
+  ];
   if (signingVariables.every((key) => Boolean(process.env[key]))) pass('android.signing-env', '当前终端已提供 Release 签名变量');
   else warn('android.signing-env', '当前终端未完整提供 Release 签名变量', `打包前设置 ${signingVariables.join('、')}`);
 
-  if (product.modules.advertising) {
+  if (product.modules.advertising && product.advertising.provider === 'gromore') {
     const aarFiles = [
       'GDTSDK.unionNormal.4.680.1550.aar',
       'Baidu_MobAds_SDK_v9.4503.aar',
@@ -299,10 +309,12 @@ function checkAndroid(product) {
       : pass('android.adn-aars', 'GroMore 第三方 ADN AAR 完整');
   }
 
-  const sdkSetting = path.join(root, `SDK_Setting_${product.advertising.gromore.appId}.json`);
-  fs.existsSync(sdkSetting)
-    ? pass('android.sdk-setting', '穿山甲 SDK Setting 文件存在')
-    : fail('android.sdk-setting', `缺少 ${path.basename(sdkSetting)}`);
+  if (product.content.type === 'shortDrama') {
+    const sdkSetting = path.join(root, `SDK_Setting_${product.content.providers.shortDrama.sdkSettingId}.json`);
+    fs.existsSync(sdkSetting)
+      ? pass('android.sdk-setting', '穿山甲 SDK Setting 文件存在')
+      : fail('android.sdk-setting', `缺少 ${path.basename(sdkSetting)}`);
+  }
 }
 
 function checkRepository() {

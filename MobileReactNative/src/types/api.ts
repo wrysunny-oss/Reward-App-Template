@@ -118,7 +118,7 @@ export interface OperationSlot {
   placement: 'HOME_BANNER' | 'HOME_RECOMMEND' | 'STARTUP_POPUP';
   title: string;
   imageUrl: string;
-  targetType: 'NONE' | 'DRAMA' | 'INTERNAL' | 'EXTERNAL';
+  targetType: 'NONE' | 'CONTENT' | 'INTERNAL' | 'EXTERNAL';
   targetValue?: string | null;
 }
 export interface AppBootstrap {
@@ -126,6 +126,10 @@ export interface AppBootstrap {
   announcements: Array<{id: string; title: string; content: string; createdAt?: string}>;
   configs: Record<string, unknown>;
   modules: ProductModules;
+  capabilities: {
+    contentType: 'none' | 'shortDrama' | 'quiz' | 'novel' | 'music';
+    advertisingProvider: 'none' | 'gromore' | 'taku';
+  };
 }
 export interface AdRuntimeConfig {
   enabled: boolean;
@@ -136,22 +140,22 @@ export interface AdRuntimeConfig {
     minimumIntervalMinutes: number; loadTimeoutMs: number; showTimeoutMs: number;
   };
   reward: {enabled: boolean; placementId: string};
-  drama: {
-    unlockMode: 'COMMON' | 'SPECIFIC';
-    freeEpisodes: number;
-    unlockEpisodes: number;
-    continuousUnlock: boolean;
-    hideRewardDialog: boolean;
-    hideCellularToast: boolean;
-    hideLikeButton: boolean;
-    hideFavorButton: boolean;
-    hideDoubleClick: boolean;
-    hideLongClickSpeed: boolean;
-    infiniteScrollEnabled: boolean;
-  };
+}
+export interface ShortDramaRuntimeConfig {
+  unlockMode: 'COMMON' | 'SPECIFIC';
+  freeEpisodes: number;
+  unlockEpisodes: number;
+  continuousUnlock: boolean;
+  hideRewardDialog: boolean;
+  hideCellularToast: boolean;
+  hideLikeButton: boolean;
+  hideFavorButton: boolean;
+  hideDoubleClick: boolean;
+  hideLongClickSpeed: boolean;
+  infiniteScrollEnabled: boolean;
 }
 export interface AdClientEvent {
-  format: 'SPLASH' | 'FEED' | 'FULL_SCREEN' | 'REWARD' | 'DRAMA_UNLOCK';
+  format: 'SPLASH' | 'FEED' | 'FULL_SCREEN' | 'REWARD' | 'CONTENT_UNLOCK';
   eventType: 'REQUEST' | 'LOADED' | 'SHOW' | 'CLICK' | 'CLOSE' | 'FAIL' | 'DISLIKE' | 'ECPM' | 'REWARD_ARRIVED';
   placementId: string;
   requestId?: string;
@@ -258,7 +262,7 @@ export interface RewardCenter {
   rewardedAdCountToday: number;
   rewardedAdDailyLimit: number;
   rewardedVideoRewardEnabled: boolean;
-  dramaUnlockRewardEnabled: boolean;
+  contentUnlockRewardEnabled: boolean;
   rewardedAdMilestones: RewardMilestone[];
   inviteMilestones: RewardMilestone[];
   inviteRewards: {

@@ -1,30 +1,29 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "product-config.schema.json",
-  "title": "富商剧场产品配置",
+  "title": "奖励型 APP 模板产品配置",
   "description": "三端共享的非敏感产品配置。修改后运行 node scripts/sync-product-config.mjs。密码、私钥和 AccessKey 禁止写入此文件。",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "productCode", "brand", "android", "admin", "modules", "domains", "advertising"],
+  "required": ["schemaVersion", "productCode", "brand", "android", "admin", "modules", "content", "domains", "advertising"],
   "properties": {
     "$schema": { "type": "string", "description": "为 VS Code 提供字段说明和格式检查，不需要修改。" },
-    "schemaVersion": { "const": 1, "description": "配置结构版本。当前只能填写 1，不是 APP 版本号。" },
+    "schemaVersion": { "const": 2, "description": "配置结构版本。当前只能填写 2，不是 APP 版本号。" },
     "productCode": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$",
       "description": "产品内部英文标识，用于脚本和资源命名。建议全小写，发布后不要随意修改。",
-      "examples": ["fushang-theater"]
+      "examples": ["reward-app-template"]
     },
     "brand": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["appDisplayName", "adminTitle", "adminDescription", "companyName", "sdkAppName"],
+      "required": ["appDisplayName", "adminTitle", "adminDescription", "companyName"],
       "properties": {
         "appDisplayName": { "type": "string", "minLength": 1, "description": "用户看到的 APP 名称，同时同步到 Android 和 iOS。" },
         "adminTitle": { "type": "string", "minLength": 1, "description": "管理后台左上角、登录页和浏览器标题使用的名称。" },
         "adminDescription": { "type": "string", "minLength": 1, "description": "管理后台的产品说明和页面元信息。" },
-        "companyName": { "type": "string", "minLength": 1, "description": "协议、关于页面等位置展示的运营公司名称。" },
-        "sdkAppName": { "type": "string", "minLength": 1, "description": "穿山甲/GroMore SDK 后台登记的应用名，可以与 APP 展示名不同。" }
+        "companyName": { "type": "string", "minLength": 1, "description": "协议、关于页面等位置展示的运营公司名称。" }
       }
     },
     "android": {
@@ -52,15 +51,40 @@
       "type": "object",
       "description": "模板级业务模块清单。第一阶段用于三端识别能力；关闭模块前应确认相关页面和接口已经完成开关接管。",
       "additionalProperties": false,
-      "required": ["shortDrama", "advertising", "rewards", "invitations", "smsRegistration", "withdrawals", "alipayPayout"],
+      "required": ["advertising", "rewards", "invitations", "smsRegistration", "withdrawals", "alipayPayout"],
       "properties": {
-        "shortDrama": { "type": "boolean", "description": "是否启用短剧内容、播放器和短剧 SDK。" },
-        "advertising": { "type": "boolean", "description": "是否启用 GroMore 广告加载、展示和广告事件。" },
+        "advertising": { "type": "boolean", "description": "是否启用广告加载、展示和广告事件。具体平台由 advertising.provider 决定。" },
         "rewards": { "type": "boolean", "description": "是否启用金币、签到、激励广告收益和收益流水。邀请和提现模块依赖它。" },
         "invitations": { "type": "boolean", "description": "是否启用邀请码、邀请关系、分享页和邀请阶梯任务；启用时 rewards 必须同时开启。" },
         "smsRegistration": { "type": "boolean", "description": "是否启用阿里云短信验证码注册。关闭前必须先实现另一种注册验证方式。" },
         "withdrawals": { "type": "boolean", "description": "是否启用用户提现、收款账户和后台提现审核；启用时 rewards 必须同时开启。" },
         "alipayPayout": { "type": "boolean", "description": "是否启用支付宝自动打款和查单；启用时 withdrawals 必须同时开启。" }
+      }
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "providers"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["none", "shortDrama", "quiz", "novel", "music"],
+          "description": "当前产品的内容模块。none 表示只保留账户、奖励等通用能力。"
+        },
+        "providers": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "shortDrama": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["sdkSettingId"],
+              "properties": {
+                "sdkSettingId": { "type": "string", "pattern": "^\\d*$", "description": "短剧内容 SDK Setting 文件编号；启用 shortDrama 时不能为空。" }
+              }
+            }
+          }
+        }
       }
     },
     "domains": {
@@ -80,20 +104,36 @@
     "advertising": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["gromore"],
+      "required": ["provider", "providers"],
       "properties": {
-        "gromore": {
+        "provider": {
+          "type": "string",
+          "enum": ["none", "gromore", "taku"],
+          "description": "当前启用的广告平台；modules.advertising=false 时必须为 none。"
+        },
+        "providers": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["appId", "splashPlacementId", "feedPlacementId", "fullScreenPlacementId", "rewardPlacementId"],
           "properties": {
-            "appId": { "type": "string", "pattern": "^\\d+$", "description": "穿山甲/GroMore 应用 ID，不是代码包名。" },
-            "splashPlacementId": { "type": "string", "pattern": "^\\d+$", "description": "开屏广告位 ID。" },
-            "feedPlacementId": { "type": "string", "pattern": "^\\d+$", "description": "信息流广告位 ID。" },
-            "fullScreenPlacementId": { "type": "string", "pattern": "^\\d+$", "description": "全屏/插屏广告位 ID。" },
-            "rewardPlacementId": { "type": "string", "pattern": "^\\d+$", "description": "激励视频广告位 ID，任务激励和短剧解锁目前共用此广告位。" }
+            "gromore": { "$ref": "#/$defs/adProvider" },
+            "taku": { "$ref": "#/$defs/adProvider" }
           }
         }
+      }
+    }
+  },
+  "$defs": {
+    "adProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registeredAppName", "appId", "splashPlacementId", "feedPlacementId", "fullScreenPlacementId", "rewardPlacementId"],
+      "properties": {
+        "registeredAppName": { "type": "string", "minLength": 1, "description": "该广告平台后台登记的应用名，可以与 APP 展示名不同。" },
+        "appId": { "type": "string", "pattern": "^\\d*$", "description": "广告平台应用 ID。选中该平台时不能为空。" },
+        "splashPlacementId": { "type": "string", "pattern": "^\\d*$", "description": "开屏广告位 ID。" },
+        "feedPlacementId": { "type": "string", "pattern": "^\\d*$", "description": "信息流广告位 ID。" },
+        "fullScreenPlacementId": { "type": "string", "pattern": "^\\d*$", "description": "全屏或插屏广告位 ID。" },
+        "rewardPlacementId": { "type": "string", "pattern": "^\\d*$", "description": "激励视频广告位 ID。" }
       }
     }
   }

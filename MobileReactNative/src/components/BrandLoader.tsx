@@ -30,7 +30,7 @@ export function ContentLoadingOverlay({
   );
 }
 
-/** 富商剧场统一加载动画：旋转品牌环、播放标识呼吸光晕和错峰跳动圆点。 */
+/** 当前迁移基线的统一加载动画：旋转品牌环、播放标识呼吸光晕和错峰跳动圆点。 */
 export function BrandLoader({
   compact = false,
   fullScreen = false,

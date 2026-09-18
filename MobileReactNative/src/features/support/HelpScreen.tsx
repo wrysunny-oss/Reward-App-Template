@@ -23,7 +23,7 @@ export function HelpScreen() {
   const toast = useAppToast();
   const [mode, setMode] = useState<Mode>('feedback');
   const [type, setType] = useState('功能问题');
-  const [targetType, setTargetType] = useState('短剧内容');
+  const [targetType, setTargetType] = useState('内容');
   const [targetId, setTargetId] = useState('');
   const [content, setContent] = useState('');
   const [contact, setContact] = useState('');
@@ -80,7 +80,7 @@ export function HelpScreen() {
       <Text style={styles.formTitle}>{mode === 'feedback' ? '告诉我们遇到的问题' : '提交违规内容线索'}</Text>
       <Text style={styles.formHint}>{mode === 'feedback' ? '提交后可在下方查看受理状态和官方回复' : '平台会核实举报信息，并将判定结果通知给你'}</Text>
       <Text style={styles.label}>{mode === 'feedback' ? '问题类型' : '举报类型'}</Text><Field value={type} onChangeText={setType} placeholder={mode === 'feedback' ? '例如：功能问题' : '例如：违规内容'} />
-      {mode === 'report' ? <><Text style={styles.label}>举报目标</Text><Field value={targetType} onChangeText={setTargetType} placeholder="例如：短剧内容、广告" /><Field value={targetId} onChangeText={setTargetId} placeholder="内容 ID（选填）" /></> : null}
+      {mode === 'report' ? <><Text style={styles.label}>举报目标</Text><Field value={targetType} onChangeText={setTargetType} placeholder="例如：内容、广告" /><Field value={targetId} onChangeText={setTargetId} placeholder="内容 ID（选填）" /></> : null}
       <Text style={styles.label}>详细说明</Text><Field multiline value={content} maxLength={10000} onChangeText={setContent} placeholder="请说明发生时间、操作步骤和具体表现" />
       {mode === 'feedback' ? <Field value={contact} maxLength={100} onChangeText={setContact} placeholder="联系方式（选填）" /> : null}
       <AppButton title={mode === 'feedback' ? '提交反馈' : '提交举报'} icon="check" loading={submitting} onPress={() => submit().catch(() => undefined)} />

@@ -59,7 +59,7 @@ export function renderDownloadPage(input: {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b1020" />
-  <meta name="description" content="下载${brandName} Android 客户端，随时随地畅享精彩短剧。" />
+  <meta name="description" content="下载${brandName} Android 客户端，随时随地体验精彩内容。" />
   <title>${brandName} - 官方下载</title>
   <style>
     :root { color-scheme: dark; font-family: Inter,system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
@@ -111,9 +111,9 @@ export function renderDownloadPage(input: {
     <main>
       <section class="hero">
         <div class="eyebrow">官方 Android 客户端</div>
-        <h1>精彩短剧，<br /><span>随时开场</span></h1>
-        <p class="lead">热门短剧持续更新，沉浸式观看体验。下载 ${brandName}，把下一段精彩装进口袋。</p>
-        <ul class="features" aria-label="产品特点"><li>海量短剧</li><li>每日更新</li><li>高清播放</li><li>安全下载</li></ul>
+        <h1>精彩内容，<br /><span>随时体验</span></h1>
+        <p class="lead">内容持续更新，奖励任务清晰可见。下载 ${brandName}，开启下一段体验。</p>
+        <ul class="features" aria-label="产品特点"><li>丰富内容</li><li>持续更新</li><li>奖励任务</li><li>安全下载</li></ul>
       </section>
       <aside class="download-card">
         <h2 class="card-title">下载 ${brandName}</h2>

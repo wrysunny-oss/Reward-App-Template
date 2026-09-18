@@ -1,5 +1,5 @@
 {
-  "name": "fushang-theater-workspace",
+  "name": "reward-app-template-workspace",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -8,6 +8,6 @@
     "product:sync": "node scripts/sync-product-config.mjs",
     "product:check": "node scripts/sync-product-config.mjs --check",
     "product:doctor": "node scripts/doctor-product.mjs",
-    "test:scripts": "node --test scripts/product-config.test.mjs"
+    "test:scripts": "node --test scripts/product-config.test.mjs scripts/module-matrix.test.mjs"
   }
 }

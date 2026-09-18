@@ -39,7 +39,7 @@ patchFile(
         'def kspVersion = ext.AsyncStorageConfig.kspVersion\n    def useNextStorage = ext.AsyncStorageConfig.useNextStorage',
       )
       .replace(
-        /        classpath "org\.jetbrains\.kotlin:kotlin-gradle-plugin:\$kotlinVersion"\r?\n        classpath "com\.google\.devtools\.ksp:symbol-processing-gradle-plugin:\$kspVersion"/,
+        / {8}classpath "org\.jetbrains\.kotlin:kotlin-gradle-plugin:\$kotlinVersion"\r?\n {8}classpath "com\.google\.devtools\.ksp:symbol-processing-gradle-plugin:\$kspVersion"/,
         [
           '        if (useNextStorage) {',
           '            classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"',

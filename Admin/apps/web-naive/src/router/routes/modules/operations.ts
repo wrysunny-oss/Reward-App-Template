@@ -1,6 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router';
 
-import { productModules } from '#/config/product.generated';
+import { contentType, productModules } from '#/config/product.generated';
 
 const rewardChildren: RouteRecordRaw[] = [
   ...(productModules.rewards ? [
@@ -67,7 +67,7 @@ const routes: RouteRecordRaw[] = [
     name: 'OperationCenter', path: '/operations', redirect: '/operations/slots',
     meta: { authority: ['operation:read'], icon: 'lucide:panels-top-left', order: 30, title: '运营配置' },
     children: [
-      ...(productModules.shortDrama ? [{ name: 'ContentCenter', path: 'content', component: () => import('#/views/operations/content/index.vue'), meta: { authority: ['operation:read'], title: '短剧内容中心' } }] : []),
+      ...(contentType === 'shortDrama' ? [{ name: 'ContentCenter', path: 'content', component: () => import('#/views/operations/content/index.vue'), meta: { authority: ['operation:read'], title: '短剧内容中心' } }] : []),
       { name: 'OperationSlots', path: 'slots', component: () => import('#/views/operations/config/slots.vue'), meta: { authority: ['operation:read'], title: '首页与弹窗' } },
       { name: 'Announcements', path: 'announcements', component: () => import('#/views/operations/config/announcements.vue'), meta: { authority: ['operation:read'], title: '公告管理' } },
       { name: 'SystemConfigs', path: 'system-configs', component: () => import('#/views/operations/config/system-configs.vue'), meta: { authority: ['operation:read'], title: '参数与开关' } },

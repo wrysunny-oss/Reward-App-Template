@@ -22,7 +22,7 @@ CREATE TABLE `ad_client_events` (
 INSERT INTO `system_configs` (`key`, `value`, `description`, `updated_at`)
 VALUES (
   'ads.runtime_config',
-  '{"enabled":true,"splash":{"enabled":true,"placementId":"104516017","timeoutMs":3000,"safetyTimeoutMs":5000},"feed":{"enabled":true,"placementId":"104517426","insertEvery":8},"fullScreen":{"enabled":true,"placementId":"104516612","playbackThreshold":5,"minimumIntervalMinutes":20,"loadTimeoutMs":8000,"showTimeoutMs":120000},"reward":{"enabled":true,"placementId":"104489019"}}',
+  '{"enabled":true,"splash":{"enabled":true,"placementId":"000000","timeoutMs":3000,"safetyTimeoutMs":5000},"feed":{"enabled":true,"placementId":"000000","insertEvery":8},"fullScreen":{"enabled":true,"placementId":"000000","playbackThreshold":5,"minimumIntervalMinutes":20,"loadTimeoutMs":8000,"showTimeoutMs":120000},"reward":{"enabled":true,"placementId":"000000"}}',
   'App 广告位、开关与频控策略',
   CURRENT_TIMESTAMP(3)
 )

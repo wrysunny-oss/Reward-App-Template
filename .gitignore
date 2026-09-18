@@ -28,10 +28,7 @@ MobileReactNative/android/app/libs/*.aar
 **/.env
 **/.env.*
 !**/.env.example
-!Admin/apps/web-naive/.env
-!Admin/apps/web-naive/.env.analyze
-!Admin/apps/web-naive/.env.development
-!Admin/apps/web-naive/.env.production
+!**/.env.*.example
 *.jks
 *.keystore
 *.p12

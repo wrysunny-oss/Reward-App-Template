@@ -52,7 +52,7 @@ if (!backendOnly) {
 }
 
 function generatedTypeScript() {
-  return `// 此文件由 scripts/sync-product-config.mjs 自动生成，请勿手动修改。\nexport const productConfig = ${JSON.stringify(product, null, 2)} as const;\n\nexport const productModules = productConfig.modules;\nexport type ProductModuleKey = keyof typeof productModules;\nexport type ProductModules = Record<ProductModuleKey, boolean>;\n`;
+  return `// 此文件由 scripts/sync-product-config.mjs 自动生成，请勿手动修改。\nexport const productConfig = ${JSON.stringify(product, null, 2)} as const;\n\nexport const productModules = productConfig.modules;\nexport type ProductModuleKey = keyof typeof productModules;\nexport type ProductModules = Record<ProductModuleKey, boolean>;\nexport type ContentType = 'music' | 'none' | 'novel' | 'quiz' | 'shortDrama';\nexport const contentType: ContentType = productConfig.content.type;\nexport type AdvertisingProvider = 'gromore' | 'none' | 'taku';\nexport const advertisingProvider: AdvertisingProvider = productConfig.advertising.provider;\n`;
 }
 
 const generatedFiles = backendOnly
@@ -72,12 +72,12 @@ if (!backendOnly) {
   appJson.displayName = product.brand.appDisplayName;
   if (writeIfChanged(appJsonPath, `${JSON.stringify(appJson, null, 2)}\n`)) changed.push(path.relative(root, appJsonPath));
 
-  const adminEnv = path.join(root, 'Admin', 'apps', 'web-naive', '.env');
+  const adminEnv = path.join(root, 'Admin', 'apps', 'web-naive', '.env.example');
   if (replaceEnvValue(adminEnv, 'VITE_APP_BRAND_NAME', product.brand.appDisplayName)) changed.push(path.relative(root, adminEnv));
   if (replaceEnvValue(adminEnv, 'VITE_APP_TITLE', product.brand.adminTitle)) changed.push(path.relative(root, adminEnv));
   if (replaceEnvValue(adminEnv, 'VITE_APP_NAMESPACE', product.admin.namespace)) changed.push(path.relative(root, adminEnv));
 
-  const adminProductionEnv = path.join(root, 'Admin', 'apps', 'web-naive', '.env.production');
+  const adminProductionEnv = path.join(root, 'Admin', 'apps', 'web-naive', '.env.production.example');
   if (replaceEnvValue(adminProductionEnv, 'VITE_GLOB_API_URL', `${product.domains.productionApiOrigin}/api/v1`)) changed.push(path.relative(root, adminProductionEnv));
 
   const adminIndexPath = path.join(root, 'Admin', 'apps', 'web-naive', 'index.html');

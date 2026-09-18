@@ -2,6 +2,8 @@
  * 项目 OpenAPI 单一事实源。
  * 每个 path 都明确声明用途、认证要求、输入参数和主要响应，新增路由时必须同步补充。
  */
+import {advertisingProvider, contentType, productConfig} from "../generated/product.generated.js";
+
 const bearer = [{ bearerAuth: [] }];
 const idParameter = (name: string, description: string) => [{ in: "path", name, required: true, description, schema: { type: "string", pattern: "^[1-9]\\d*$" } }];
 const pageParameters = [
@@ -11,10 +13,10 @@ const pageParameters = [
 const ok = (description = "请求成功") => ({ "200": { description }, "400": { description: "参数校验失败" }, "401": { description: "未登录或令牌失效" }, "403": { description: "权限不足" } });
 const jsonBody = (properties: Record<string, unknown>, required: string[]) => ({ required: true, content: { "application/json": { schema: { type: "object", properties, required } } } });
 
-export const openApiDocument = {
+const baseOpenApiDocument = {
   openapi: "3.0.3",
   info: {
-    title: "幻悦短剧 API",
+    title: `${productConfig.brand.appDisplayName} API`,
     version: "1.0.0",
     description: "Express + Prisma + MySQL 后端接口。统一响应为 `{ code, message, data, requestId }`，BigInt 字段以字符串返回。",
   },
@@ -127,7 +129,7 @@ export const openApiDocument = {
     "/admin/uploads/images": { post: { tags: ["后台-运营"], summary: "上传运营图片", description: "上传 JPEG、PNG、WebP 或 GIF，单文件最大 5MB。需要 upload:create。", security: bearer, requestBody: { required: true, content: { "multipart/form-data": { schema: { type: "object", required: ["file"], properties: { file: { type: "string", format: "binary" } } } } } }, responses: { ...ok(), "201": { description: "上传成功，返回资产和 URL" } } } },
     "/admin/operation-slots": {
       get: { tags: ["后台-运营"], summary: "运营位列表", description: "获取轮播、推荐位和启动弹窗。需要 operation:read。", security: bearer, responses: ok() },
-      post: { tags: ["后台-运营"], summary: "创建运营位", description: "创建展示位置、图片、跳转、排序和有效期配置。需要 operation:update。", security: bearer, requestBody: jsonBody({ placement: { type: "string", enum: ["HOME_BANNER", "HOME_RECOMMEND", "STARTUP_POPUP"] }, title: { type: "string" }, imageUrl: { type: "string" }, targetType: { type: "string", enum: ["NONE", "DRAMA", "INTERNAL", "EXTERNAL"] }, targetValue: { type: "string", nullable: true }, sort: { type: "integer" }, enabled: { type: "boolean" }, startAt: {type: "string", format: "date-time", nullable: true}, endAt: {type: "string", format: "date-time", nullable: true} }, ["placement", "title", "imageUrl", "targetType", "sort", "enabled"]), responses: { ...ok(), "201": { description: "创建成功" } } },
+      post: { tags: ["后台-运营"], summary: "创建运营位", description: "创建展示位置、图片、跳转、排序和有效期配置。需要 operation:update。", security: bearer, requestBody: jsonBody({ placement: { type: "string", enum: ["HOME_BANNER", "HOME_RECOMMEND", "STARTUP_POPUP"] }, title: { type: "string" }, imageUrl: { type: "string" }, targetType: { type: "string", enum: ["NONE", "CONTENT", "INTERNAL", "EXTERNAL"] }, targetValue: { type: "string", nullable: true }, sort: { type: "integer" }, enabled: { type: "boolean" }, startAt: {type: "string", format: "date-time", nullable: true}, endAt: {type: "string", format: "date-time", nullable: true} }, ["placement", "title", "imageUrl", "targetType", "sort", "enabled"]), responses: { ...ok(), "201": { description: "创建成功" } } },
     },
     "/admin/operation-slots/{id}": {
       put: { tags: ["后台-运营"], summary: "更新运营位", description: "更新完整运营位配置。需要 operation:update。", security: bearer, parameters: idParameter("id", "运营位 ID"), responses: ok() },
@@ -188,7 +190,7 @@ export const openApiDocument = {
     "/admin/reward-rules": { get: { tags: ["后台-奖励"], summary: "奖励规则列表", description: "获取注册、邀请和签到奖励配置。需要 reward:read。", security: bearer, responses: ok() } },
     "/admin/ad-reward-config": {
       get: { tags: ["后台-奖励"], summary: "获取全局广告配置", description: "返回广告分成比例、四种广告独立发币开关、每日激励广告次数上限及加密 eCPM 服务端就绪状态。", security: bearer, responses: ok() },
-      put: { tags: ["后台-奖励"], summary: "更新全局广告及阶梯任务配置", description: "设置广告分成、每日收益次数，并配置广告收益与邀请好友的每日或永久累计阶梯奖励。需要 reward:update 和二次密码验证。", security: bearer, requestBody: jsonBody({ defaultShareRateBps: { type: "integer", minimum: 0, maximum: 10000 }, directShareRateBps: { type: "integer", minimum: 0, maximum: 10000 }, indirectShareRateBps: { type: "integer", minimum: 0, maximum: 10000 }, dailyRewardedAdLimit: { type: "integer", minimum: 0, maximum: 1000, example: 10 }, splashRewardEnabled: { type: "boolean" }, feedRewardEnabled: { type: "boolean" }, fullScreenRewardEnabled: { type: "boolean" }, rewardedVideoRewardEnabled: { type: "boolean" }, dramaUnlockRewardEnabled: { type: "boolean" }, rewardedAdMilestones: { type: "array", items: { type: "object", properties: { count: { type: "integer" }, rewardCoins: { type: "integer" }, period: { type: "string", enum: ["DAILY", "LIFETIME"] } } } }, inviteMilestones: { type: "array", items: { type: "object", properties: { count: { type: "integer" }, rewardCoins: { type: "integer" }, period: { type: "string", enum: ["DAILY", "LIFETIME"] } } } } }, ["defaultShareRateBps", "directShareRateBps", "indirectShareRateBps", "dailyRewardedAdLimit", "splashRewardEnabled", "feedRewardEnabled", "fullScreenRewardEnabled", "rewardedVideoRewardEnabled", "dramaUnlockRewardEnabled", "rewardedAdMilestones", "inviteMilestones"]), responses: ok() },
+      put: { tags: ["后台-奖励"], summary: "更新全局广告及阶梯任务配置", description: "设置广告分成、每日收益次数，并配置广告收益与邀请好友的每日或永久累计阶梯奖励。需要 reward:update 和二次密码验证。", security: bearer, requestBody: jsonBody({ defaultShareRateBps: { type: "integer", minimum: 0, maximum: 10000 }, directShareRateBps: { type: "integer", minimum: 0, maximum: 10000 }, indirectShareRateBps: { type: "integer", minimum: 0, maximum: 10000 }, dailyRewardedAdLimit: { type: "integer", minimum: 0, maximum: 1000, example: 10 }, splashRewardEnabled: { type: "boolean" }, feedRewardEnabled: { type: "boolean" }, fullScreenRewardEnabled: { type: "boolean" }, rewardedVideoRewardEnabled: { type: "boolean" }, contentUnlockRewardEnabled: { type: "boolean" }, rewardedAdMilestones: { type: "array", items: { type: "object", properties: { count: { type: "integer" }, rewardCoins: { type: "integer" }, period: { type: "string", enum: ["DAILY", "LIFETIME"] } } } }, inviteMilestones: { type: "array", items: { type: "object", properties: { count: { type: "integer" }, rewardCoins: { type: "integer" }, period: { type: "string", enum: ["DAILY", "LIFETIME"] } } } } }, ["defaultShareRateBps", "directShareRateBps", "indirectShareRateBps", "dailyRewardedAdLimit", "splashRewardEnabled", "feedRewardEnabled", "fullScreenRewardEnabled", "rewardedVideoRewardEnabled", "contentUnlockRewardEnabled", "rewardedAdMilestones", "inviteMilestones"]), responses: ok() },
     },
     "/admin/ad-reward-settlements": {
       get: { tags: ["后台-奖励"], summary: "广告收益结算记录", description: "分页查看广告收入、观看者完整基础收益以及平台支付的直推和间推返佣快照。需要 reward:read。", security: bearer, parameters: pageParameters, responses: ok() },
@@ -201,7 +203,7 @@ export const openApiDocument = {
     "/webhooks/pangle/reward": { get: { tags: ["平台回调"], summary: "GroMore 服务端激励验证", description: "GroMore 以 GET 方式回调；按 sha256(m-key:trans_id) 验签、校验 prime_rit 聚合广告位、原子抢占 trans_id，并按北京时间执行后台配置的每日次数限制。", parameters: [
       { in: "query", name: "user_id", required: true, schema: { type: "string" } }, { in: "query", name: "trans_id", required: true, schema: { type: "string" } },
       { in: "query", name: "reward_amount", required: true, schema: { type: "integer" } }, { in: "query", name: "reward_name", schema: { type: "string" } },
-      { in: "query", name: "mediation_rit", required: true, schema: { type: "string", example: "104489019" } }, { in: "query", name: "ecpm", required: true, schema: { type: "string" } },
+      { in: "query", name: "mediation_rit", required: true, schema: { type: "string", example: "000000" } }, { in: "query", name: "ecpm", required: true, schema: { type: "string" } },
       { in: "query", name: "sign", required: true, schema: { type: "string" } },
     ], responses: { "200": { description: "GroMore 约定响应" } } } },
     "/admin/reward-rules/{code}": { put: { tags: ["后台-奖励"], summary: "更新奖励规则", description: "修改奖励金币和启用状态并记录审计日志。需要 reward:update。", security: bearer, parameters: [{ in: "path", name: "code", required: true, description: "奖励规则编码", schema: { type: "string", example: "SIGNIN_DAY_1" } }], requestBody: jsonBody({ amount: { type: "string", description: "非负整数" }, enabled: { type: "boolean" } }, ["amount", "enabled"]), responses: ok() } },
@@ -218,3 +220,30 @@ export const openApiDocument = {
     securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT", description: "登录后填写 accessToken" } },
   },
 } as const;
+
+const shortDramaPathPrefixes = [
+  "/content",
+  "/library",
+  "/admin/content-center",
+  "/admin/sdk-health",
+  "/rewards/ad-rewards/drama-unlock-intent",
+  "/rewards/golden-watch",
+];
+
+/** 接口文档与实际挂载模块保持一致，关闭内容插件后不暴露其菜单式接口说明。 */
+const disabledPathPrefixes = [
+  ...(contentType === "shortDrama" ? [] : shortDramaPathPrefixes),
+  ...(advertisingProvider === "gromore" ? [] : ["/webhooks/pangle"]),
+];
+
+export const openApiDocument = {
+  ...baseOpenApiDocument,
+  info: {
+    ...baseOpenApiDocument.info,
+    title: contentType === "shortDrama" ? baseOpenApiDocument.info.title : "奖励型 APP API",
+  },
+  tags: baseOpenApiDocument.tags.filter((tag) => contentType === "shortDrama" || !["短剧", "用户资料库"].includes(tag.name)),
+  paths: Object.fromEntries(
+    Object.entries(baseOpenApiDocument.paths).filter(([path]) => !disabledPathPrefixes.some((prefix) => path.startsWith(prefix))),
+  ),
+};

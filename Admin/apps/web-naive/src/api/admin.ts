@@ -176,7 +176,7 @@ export interface AlipayPayoutActionResult {
 export interface OperationSlot {
   enabled: boolean; endAt?: null | string; id: string; imageUrl: string;
   placement: 'HOME_BANNER' | 'HOME_RECOMMEND' | 'STARTUP_POPUP'; sort: number;
-  startAt?: null | string; targetType: 'DRAMA' | 'EXTERNAL' | 'INTERNAL' | 'NONE'; targetValue?: null | string; title: string;
+  startAt?: null | string; targetType: 'CONTENT' | 'EXTERNAL' | 'INTERNAL' | 'NONE'; targetValue?: null | string; title: string;
 }
 export interface Announcement { content: string; createdAt?: string; endAt?: null | string; id: string; startAt?: null | string; status: 'DRAFT' | 'OFFLINE' | 'PUBLISHED'; title: string; updatedAt?: string; }
 export interface SendNotificationInput { content:string; phone?:string; target:'ALL'|'USER'; title:string; type:'PROMOTION'|'REWARD'|'SYSTEM'|'WITHDRAWAL' }
@@ -190,12 +190,12 @@ export interface AdRuntimeConfig {
     placementId: string; playbackThreshold: number; showTimeoutMs: number;
   };
   reward: { enabled: boolean; placementId: string };
-  drama: {
-    unlockMode: 'COMMON' | 'SPECIFIC'; freeEpisodes: number; unlockEpisodes: number;
-    continuousUnlock: boolean; hideRewardDialog: boolean; hideCellularToast: boolean;
-    hideLikeButton: boolean; hideFavorButton: boolean; hideDoubleClick: boolean;
-    hideLongClickSpeed: boolean; infiniteScrollEnabled: boolean;
-  };
+}
+export interface ShortDramaRuntimeConfig {
+  unlockMode: 'COMMON' | 'SPECIFIC'; freeEpisodes: number; unlockEpisodes: number;
+  continuousUnlock: boolean; hideRewardDialog: boolean; hideCellularToast: boolean;
+  hideLikeButton: boolean; hideFavorButton: boolean; hideDoubleClick: boolean;
+  hideLongClickSpeed: boolean; infiniteScrollEnabled: boolean;
 }
 export interface AdEventSummary {
   since: string;
@@ -341,7 +341,7 @@ export const updateRolePermissionsApi = (id: number, permissionIds: number[]) =>
   );
 export const getAdministratorsApi = () => requestClient.get<Array<AdminUser & { roles: Array<{ role: Role }> }>>('/admin/administrators');
 export const getRewardRulesApi = () => requestClient.get<RewardRule[]>('/admin/reward-rules');
-export interface AdRewardSettlement { id:string; requestId:string; userId:string; revenueMicros:string; baseUserCoins:string; awardedCoins:string; milestoneBonusCoins:string; directAwardedCoins:string; indirectAwardedCoins:string; commissionFunding:'PLATFORM_FUNDED'|'USER_DEDUCTED'; agentCommissions:Array<{id:string;depth:number;shareRateBps:number;awardedCoins:string;agent:{id:string;nickname:string;phone:string}}>; format:'DRAMA_UNLOCK'|'FEED'|'FULL_SCREEN'|'REWARD'|'SPLASH'; source:string; createdAt:string; user:{nickname:string;phone:string} }
+export interface AdRewardSettlement { id:string; requestId:string; userId:string; revenueMicros:string; baseUserCoins:string; awardedCoins:string; milestoneBonusCoins:string; directAwardedCoins:string; indirectAwardedCoins:string; commissionFunding:'PLATFORM_FUNDED'|'USER_DEDUCTED'; agentCommissions:Array<{id:string;depth:number;shareRateBps:number;awardedCoins:string;agent:{id:string;nickname:string;phone:string}}>; format:'CONTENT_UNLOCK'|'FEED'|'FULL_SCREEN'|'REWARD'|'SPLASH'; source:string; createdAt:string; user:{nickname:string;phone:string} }
 export interface AdRewardDashboard { count:number; revenueMicros:string; grossEquivalentCoins:string; baseUserCoins:string; awardedCoins:string; milestoneBonusCoins:string; directAwardedCoins:string; indirectAwardedCoins:string; agentAwardedCoins:string; platformRetainedCoins:string }
 export interface AgentOverview {
   ads: {

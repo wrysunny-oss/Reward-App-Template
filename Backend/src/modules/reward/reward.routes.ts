@@ -6,6 +6,7 @@ import { adRewardStatusParamsSchema, bindInviteSchema, dramaUnlockAdIntentSchema
 import * as rewardService from "./reward.service.js";
 import { actionLimiter } from "../../middleware/rate-limit.js";
 import { requireProductModules } from "../../middleware/product-module.js";
+import { contentType } from "../../generated/product.generated.js";
 
 const router = Router();
 router.use(authenticate);
@@ -18,9 +19,11 @@ router.get("/ledgers", requireProductModules("rewards"), validate(rewardListQuer
 router.get("/ad-rewards/:transactionId/status", requireProductModules("advertising", "rewards"), validate(adRewardStatusParamsSchema, "params"), async (req, res) =>
   ok(res, await rewardService.getAdRewardStatus(req.auth!.userId, (req.params as unknown as AdRewardStatusParams).transactionId)),
 );
-router.post("/ad-rewards/drama-unlock-intent", requireProductModules("shortDrama", "advertising", "rewards"), actionLimiter, validate(dramaUnlockAdIntentSchema), async (req, res) =>
-  ok(res, rewardService.issueDramaUnlockAdIntent(req.auth!.userId, req.body)),
-);
+if (contentType === "shortDrama") {
+  router.post("/ad-rewards/drama-unlock-intent", requireProductModules("advertising", "rewards"), actionLimiter, validate(dramaUnlockAdIntentSchema), async (req, res) =>
+    ok(res, rewardService.issueDramaUnlockAdIntent(req.auth!.userId, req.body)),
+  );
+}
 /** GET /ad-rewards/latest：SDK 暂未返回交易号时，按广告开始时间补查服务端结算。 */
 router.get("/ad-rewards/latest", requireProductModules("advertising", "rewards"), validate(latestAdRewardQuerySchema, "query"), async (req, res) =>
   ok(res, await rewardService.getLatestAdReward(req.auth!.userId, (res.locals.validatedQuery as LatestAdRewardQuery).after, (res.locals.validatedQuery as LatestAdRewardQuery).format)),
@@ -43,8 +46,10 @@ router.put("/invite-code", requireProductModules("invitations"), actionLimiter, 
 router.post("/check-ins", requireProductModules("rewards"), actionLimiter, async (req, res) => ok(res, await rewardService.checkIn(req.auth!.userId), "签到成功", 201));
 
 /** 接收原生播放器的前台观看心跳并在达标时幂等结算。 */
-router.post("/golden-watch/progress", requireProductModules("shortDrama", "rewards"), validate(goldenWatchProgressSchema), async (req, res) =>
-  ok(res, await rewardService.recordGoldenWatchProgress(req.auth!.userId, req.body as GoldenWatchProgressInput, req)),
-);
+if (contentType === "shortDrama") {
+  router.post("/golden-watch/progress", requireProductModules("rewards"), validate(goldenWatchProgressSchema), async (req, res) =>
+    ok(res, await rewardService.recordGoldenWatchProgress(req.auth!.userId, req.body as GoldenWatchProgressInput, req)),
+  );
+}
 
 export default router;

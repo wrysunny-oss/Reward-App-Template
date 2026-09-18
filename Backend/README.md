@@ -1,4 +1,4 @@
-# HanLe Theater API
+# Reward App Template API
 
 Express 5 + TypeScript + Prisma + MySQL 的模块化单体后端，同时承载 App API、代理端 API 与运营后台 API。
 

@@ -1,9 +1,10 @@
 import type { UserInfo } from '@vben/types';
 
 import { requestClient } from '#/api/request';
+import { productConfig } from '#/config/product.generated';
 import { getAccessCodesApi } from './auth';
 
-const brandName = import.meta.env.VITE_APP_BRAND_NAME || '富商剧场';
+const brandName = productConfig.brand.appDisplayName;
 
 /**
  * 获取用户信息

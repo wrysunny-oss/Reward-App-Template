@@ -10,9 +10,21 @@ pluginManagement {
 plugins { id('com.facebook.react.settings') }
 
 extensions.configure(com.facebook.react.ReactSettingsExtension) { extension ->
-    extension.autolinkLibrariesFromCommand()
+    def productConfigPath = System.getenv('REWARD_APP_PRODUCT_CONFIG') ?: '../product.generated.json'
+    def productConfigFile = file(productConfigPath)
+    def cliCommand = System.getProperty('os.name').toLowerCase().contains('windows')
+        ? ['cmd', '/c', 'npx.cmd', '@react-native-community/cli', 'config']
+        : ['npx', '@react-native-community/cli', 'config']
+    def autolinkInputs = files(
+        '../yarn.lock',
+        '../package-lock.json',
+        '../package.json',
+        '../react-native.config.js',
+        productConfigFile,
+    )
+    extension.autolinkLibrariesFromCommand(cliCommand, file('../'), autolinkInputs)
 }
 
-rootProject.name = 'HuanyueTheater'
+rootProject.name = 'RewardAppTemplate'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')

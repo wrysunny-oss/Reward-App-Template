@@ -1,4 +1,4 @@
-# 富商剧场生产部署
+# 奖励应用模板生产部署
 
 目标环境：Alibaba Cloud Linux 3，Nginx 由服务器面板管理，Docker Compose 运行 Backend 与 MySQL 8.4。
 
@@ -26,14 +26,14 @@ chmod 600 .env backend.env
 - JWT、提现数据密钥及穿山甲回调/验签密钥
 - 支付宝 App ID、应用私钥、三个证书路径和已审核的转账场景
 - 阿里云 RAM AccessKey、可用短信签名和验证码模板
-- `APP_BRAND_NAME=富商剧场`
+- `APP_BRAND_NAME=奖励应用模板`
 - `ADMIN_ACCESS_TOKEN_EXPIRES_IN=24h`
 - `REFRESH_TOKEN_EXPIRES_IN=30d`
 
 穿山甲服务端激励回调地址配置为：
 
 ```text
-https://api.nantongjiangnan.cn/api/v1/webhooks/pangle/reward
+https://api.example.com/api/v1/webhooks/pangle/reward
 ```
 
 ## 2. 启动数据库并迁移
@@ -45,7 +45,7 @@ docker compose --env-file .env -f docker-compose.production.yml --profile tools 
 docker compose --env-file .env -f docker-compose.production.yml up -d backend
 docker compose --env-file .env -f docker-compose.production.yml ps
 curl http://127.0.0.1:3000/ready
-curl https://api.nantongjiangnan.cn/ready
+curl https://api.example.com/ready
 ```
 
 每次发布 Backend 时都先执行迁移，再重建服务：
@@ -67,12 +67,12 @@ pnpm --filter @vben/web-naive run build
 将 `Admin/apps/web-naive/dist/` 中的文件上传到：
 
 ```text
-/www/wwwroot/admin.nantongjiangnan.cn
+/www/wwwroot/admin.example.com
 ```
 
 在面板创建两个 HTTPS 站点，将 `nginx/*.location.conf` 的内容加入对应站点。API 站点反向代理本机 `3000`，Admin 站点直接提供静态文件。
 
-发布后打开 `https://admin.nantongjiangnan.cn`，确认登录、数据看板、奖励配置和弹窗滚动均正常。
+发布后打开 `https://admin.example.com`，确认登录、数据看板、奖励配置和弹窗滚动均正常。
 
 ## 4. APP 正式包
 
@@ -82,7 +82,7 @@ pnpm --filter @vben/web-naive run build
 
 ```powershell
 cd MobileReactNative/android
-.\gradlew.bat bundleRelease -PAPP_ENV=production -PAPP_API_ORIGIN=https://api.nantongjiangnan.cn
+.\gradlew.bat bundleRelease -PAPP_ENV=production -PAPP_API_ORIGIN=https://api.example.com
 ```
 
 生成文件位于 `MobileReactNative/android/app/build/outputs/bundle/release/app-release.aab`。正式打包前确认 `app.json.displayName` 与穿山甲 `ad-config.ts.sdkAppName` 分别符合应用商店和穿山甲后台配置。

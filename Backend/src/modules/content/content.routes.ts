@@ -4,9 +4,13 @@ import { validate } from "../../middleware/request.js";
 import { authenticate } from "../../middleware/auth.js";
 import { contentImageQuerySchema, dramaIdSchema, dramaListQuerySchema, playbackValidationSchema, type DramaListQuery, type PlaybackValidationInput } from "./content.schema.js";
 import * as contentService from "./content.service.js";
+import { getShortDramaRuntimeConfig } from "./short-drama-runtime.service.js";
 import { createHash } from "node:crypto";
 
 const router = Router();
+
+/** GET /runtime-config: content-specific playback and unlock settings. */
+router.get("/runtime-config", async (_req, res) => ok(res, await getShortDramaRuntimeConfig()));
 
 /** 将设备标识稳定映射为穿山甲要求的正整数 uid，不暴露真实手机号或数据库用户 ID。 */
 function contentUid(deviceId: unknown) {

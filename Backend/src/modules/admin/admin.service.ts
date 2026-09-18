@@ -132,7 +132,8 @@ export const getAdRewardConfig = async () => {
   const config = await prisma.adRewardConfig.upsert({
     where: { id: 1 }, create: { id: 1 }, update: {},
   });
-  return { ...config, rewardedAdMilestones: normalizeRewardMilestones(config.rewardedAdMilestones), inviteMilestones: normalizeRewardMilestones(config.inviteMilestones, 1_000_000), secureEcpmReady: Boolean(env.PANGLE_RSS_PRIVATE_KEY) };
+  const { dramaUnlockRewardEnabled, ...common } = config;
+  return { ...common, contentUnlockRewardEnabled: dramaUnlockRewardEnabled, rewardedAdMilestones: normalizeRewardMilestones(config.rewardedAdMilestones), inviteMilestones: normalizeRewardMilestones(config.inviteMilestones, 1_000_000), secureEcpmReady: Boolean(env.PANGLE_RSS_PRIVATE_KEY) };
 };
 
 /** 数据库 JSON 进入结算前统一清洗，旧数据或人工误改不会导致错误发币。 */
@@ -152,8 +153,10 @@ export function normalizeRewardMilestones(value: Prisma.JsonValue | null | undef
 
 /** 更新全局广告分成比例并记录审计；比例以万分比保存。 */
 export async function updateAdRewardConfig(operatorId: bigint, rates: UpdateAdRewardConfig, request: Pick<Request, "method" | "path" | "ip" | "header">) {
+  const { contentUnlockRewardEnabled, ...commonRates } = rates;
   const normalizedRates = {
-    ...rates,
+    ...commonRates,
+    dramaUnlockRewardEnabled: contentUnlockRewardEnabled,
     rewardedAdMilestones: normalizeRewardMilestones(rates.rewardedAdMilestones as unknown as Prisma.JsonValue) as unknown as Prisma.InputJsonValue,
     inviteMilestones: normalizeRewardMilestones(rates.inviteMilestones as unknown as Prisma.JsonValue, 1_000_000) as unknown as Prisma.InputJsonValue,
   };
@@ -162,7 +165,8 @@ export async function updateAdRewardConfig(operatorId: bigint, rates: UpdateAdRe
     await tx.auditLog.create({ data: { operatorId, action: "ad.reward.config.update", method: request.method, path: request.path, targetType: "ad_reward_config", targetId: "1", ip: request.ip, userAgent: request.header("user-agent"), detail: normalizedRates as unknown as Prisma.InputJsonValue } });
     return config;
   });
-  return { ...config, rewardedAdMilestones: normalizeRewardMilestones(config.rewardedAdMilestones), inviteMilestones: normalizeRewardMilestones(config.inviteMilestones, 1_000_000), secureEcpmReady: Boolean(env.PANGLE_RSS_PRIVATE_KEY) };
+  const { dramaUnlockRewardEnabled, ...common } = config;
+  return { ...common, contentUnlockRewardEnabled: dramaUnlockRewardEnabled, rewardedAdMilestones: normalizeRewardMilestones(config.rewardedAdMilestones), inviteMilestones: normalizeRewardMilestones(config.inviteMilestones, 1_000_000), secureEcpmReady: Boolean(env.PANGLE_RSS_PRIVATE_KEY) };
 }
 
 /** 设置用户独立广告分成；null 恢复继承全局比例。 */
@@ -215,10 +219,10 @@ export function calculateAgentCommission(baseUserCoins: bigint, agentShareRateBp
  * 按“人民币收入 × 每元金币 × 有效分成比例”结算单次广告收益。
  * requestId 幂等；用户独立比例优先，否则使用全局比例。
  */
-export type AdRewardFormat = "SPLASH" | "FEED" | "FULL_SCREEN" | "REWARD" | "DRAMA_UNLOCK";
+export type AdRewardFormat = "SPLASH" | "FEED" | "FULL_SCREEN" | "REWARD" | "CONTENT_UNLOCK";
 
 /** 福利中心任务激励和短剧解锁激励共用同一个每日收益次数额度。 */
-export const DAILY_REWARDED_AD_FORMATS = ["REWARD", "DRAMA_UNLOCK"] as const;
+export const DAILY_REWARDED_AD_FORMATS = ["REWARD", "CONTENT_UNLOCK"] as const;
 
 export function usesDailyRewardedAdLimit(format: AdRewardFormat) {
   return DAILY_REWARDED_AD_FORMATS.some((item) => item === format);
@@ -229,7 +233,7 @@ const rewardSwitchByFormat = {
   FEED: "feedRewardEnabled",
   FULL_SCREEN: "fullScreenRewardEnabled",
   REWARD: "rewardedVideoRewardEnabled",
-  DRAMA_UNLOCK: "dramaUnlockRewardEnabled",
+  CONTENT_UNLOCK: "dramaUnlockRewardEnabled",
 } as const;
 
 export function settleAdReward(operatorId: bigint | null, input: { requestId: string; revenueYuan: string; source: string; userId: bigint; format?: AdRewardFormat; enforceDailyLimit?: boolean }, request: Pick<Request, "method" | "path" | "ip" | "header">) {
@@ -260,7 +264,6 @@ export function settleAdReward(operatorId: bigint | null, input: { requestId: st
       const rewardedWhere: Prisma.AdRewardSettlementWhereInput = {
           userId: input.userId,
           format: { in: [...DAILY_REWARDED_AD_FORMATS] },
-          source: { startsWith: "GROMORE:" },
           awardedCoins: { gt: 0n },
       };
       const [settledToday, settledLifetime] = await Promise.all([
